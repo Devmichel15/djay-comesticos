@@ -1,10 +1,10 @@
 import Header from "../Components/Header";
-
+import Hero from "../Components/Hero";
 function Landing() {
     return (
         <div>
             <Header />
-            <h1>Olá, Mundo</h1>
+            <Hero />
         </div>
     )
 }

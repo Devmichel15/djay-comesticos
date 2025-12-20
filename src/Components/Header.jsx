@@ -1,124 +1,111 @@
-import { useState } from "react";
-import { FaSearch, FaBars, FaTimes } from "react-icons/fa";
+import React, { useState } from "react";
+import { FaSearch, FaBars, FaShoppingCart, FaUser } from "react-icons/fa";
 
-function Header() {
-  const [openMenu, setOpenMenu] = useState(false);
-  const [openSearch, setOpenSearch] = useState(false);
+const Header = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const cartCount = 2; // depois isso vem do estado/global
+
+  const toggleMenu = () => setIsMenuOpen(prev => !prev);
+  const closeMenu = () => setIsMenuOpen(false);
 
   return (
-
-  <header className="flex w-full px-2 border-b border-b-black md:flex-row flex-col">
-    {/* Logo and Mobile Buttons */}
-    <div className="flex items-center justify-between w-full md:w-auto">
-      <img
-        src="/logoCliente.jpeg"
-        alt="Logo da Marca"
-        className="w-52 h-28 rounded-2xl object-center object-cover"
-      />
-
-      <div className="flex md:hidden gap-3">
-        <button onClick={() => setOpenSearch(!openSearch)}>
-          <FaSearch size={20} />
-        </button>
-        <button onClick={() => setOpenMenu(!openMenu)}>
-          {openMenu ? <FaTimes size={22} /> : <FaBars size={22} />}
-        </button>
+    <header className="sticky top-0 z-50 w-full bg-white text-grayDark border-b border-goldSoft">
+      
+      {/* Top info bar (opcional, mas premium) */}
+      <div className="hidden md:block text-center text-xs py-2 bg-grayLight bg-black text-white">
+        Envio rápido em Luanda • Produtos 100% originais
       </div>
-    </div>
 
-    <div className=" flex-col-reverse justify-around items-center w-full p-2 hidden md:flex">
-      {/* Search */}
-      <div className="w-full flex justify-center">
-        <div className="relative w-2/3">
-          <input
-            type="text"
-            placeholder="O seu produto favorito"
-            className="w-full bg-gray-100 py-2 pl-4 pr-10 rounded-2xl outline-[#fae07d]"
-          />
-          <FaSearch
-            size={18}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer hover:text-[#fae07d] transition-all duration-300 ease-in-out"
-          />
+      {/* Top bar */}
+      <div className="flex items-center justify-between py-3 md:py-4 px-4">
+        
+        {/* Logo */}
+        <img
+          src="/logoCliente.jpeg"
+          alt="Djay Cosméticos"
+          className="h-16 md:h-14 lg:h-16 object-contain"
+        />
+
+        {/* Busca desktop */}
+        <div className="flex-1 hidden md:flex justify-center">
+          <div className="w-10/12 relative">
+            <input
+              type="text"
+              placeholder="O que deseja procurar?"
+              className="w-full h-11 rounded-full border border-neutral-300 px-5 pr-12 text-sm focus:outline-none focus:border-yellow-600"
+            />
+            <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-600" />
+          </div>
+        </div>
+
+        {/* Ícones */}
+        <div className="flex items-center gap-4">
+          
+          {/* Conta (desktop) */}
+          <button className="hidden md:flex items-center gap-2 text-sm hover:text-gold transition cursor-pointer">
+            <FaUser fontSize={20}/>
+          </button>
+
+          {/* Carrinho */}
+          <button className="relative hover:text-gold transition mr-7 cursor-pointer">
+            <FaShoppingCart size={20} />
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-gold text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                {cartCount}
+              </span>
+            )}
+          </button>
+
+          {/* Menu mobile */}
+          <button
+            onClick={toggleMenu}
+            className="md:hidden w-10 h-10 flex items-center justify-center"
+            aria-label="Abrir menu"
+          >
+            <FaBars size={20} />
+          </button>
         </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="w-full flex justify-center items-center">
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Início
-        </a>
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Produtos
-        </a>
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Contacto
-        </a>
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Carrinho
-        </a>
-      </nav>
-    </div>
+      {/* Menu mobile */}
+      {isMenuOpen && (
+        <nav className="md:hidden bg-white border-t border-goldSoft px-4 py-4">
+          
+          {/* Busca mobile */}
+          <div className="mb-4">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="O que deseja procurar?"
+                className="w-full h-11 rounded-full border border-goldSoft px-5 pr-12 text-sm focus:outline-none"
+              />
+              <FaSearch className="absolute right-4 top-1/2 -translate-y-1/2 text-grayDark" />
+            </div>
+          </div>
 
-    {/* Mobile Search */}
-    {openSearch && (
-      <div className=" w-full mt-2 flex justify-center">
-        <div className="relative w-2/3">
-          <input
-            type="text"
-            placeholder="O seu produto favorito"
-            className="w-full bg-gray-100 py-2 pl-4 pr-10 rounded-2xl outline-[#fae07d]"
-          />
-          <FaSearch
-            size={18}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 cursor-pointer"
-          />
-        </div>
+          <ul className="flex flex-col gap-4 text-sm font-medium">
+            <li onClick={closeMenu}>Novidades</li>
+            <li onClick={closeMenu}>Produtos</li>
+            <li onClick={closeMenu}>Promoções</li>
+            <li className="flex items-center gap-2">
+              <FaUser /> Minha conta
+            </li>
+          </ul>
+        </nav>
+      )}
+
+      {/* Menu desktop */}
+      <div className="hidden md:block border-t border-goldSoft">
+        <nav className="max-w-7xl mx-auto px-4">
+          <ul className="flex justify-center gap-8 text-sm font-medium py-3">
+            <li className="hover:text-gold transition">Novidades</li>
+            <li className="hover:text-gold transition">Acessórios</li>
+            <li className="hover:text-gold transition">Promoções</li>
+          </ul>
+        </nav>
       </div>
-    )}
-
-    {/* Mobile Menu */}
-    {openMenu && (
-      <nav className=" w-full flex flex-col items-center gap-3 mt-2 md:hidden">
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Início
-        </a>
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Produtos
-        </a>
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Contacto
-        </a>
-        <a
-          href="#"
-          className="mr-4 hover:underline hover:text-[#e2d394] transition-all duration-300 ease-in-out hover:scale-105 cursor-pointer"
-        >
-          Carrinho
-        </a>
-      </nav>
-    )}
-  </header>
+    </header>
   );
-}
+};
 
 export default Header;
