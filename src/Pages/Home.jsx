@@ -1,12 +1,14 @@
 import Header from "../Components/Header";
 import Hero from "../Components/Hero";
-function Landing() {
+import Products from "../Components/Products";
+function Home() {
     return (
         <div>
             <Header />
             <Hero />
+            <Products />
         </div>
     )
 }
 
-export default Landing;
+export default Home;

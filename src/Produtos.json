@@ -1,0 +1,67 @@
+[
+  {
+    "categoria": "Fixadores",
+    "produtos": [
+      {"nome": "Fixador Kryolan 75ml", "preco": "27.000kz", "img": "/public/product1.png"},
+      {"nome": "Fixador Kryolan 300ml", "preco": "59.000kz", "img": "/public/product2.png"},
+      {"nome": "Fixador L’Oréal 75ml", "preco": "19.000kz", "img": "/public/product3.png"},
+      {"nome": "Fixador L’Oréal 150ml", "preco": "28.000kz", "img": "/public/product4.png"},
+      {"nome": "Fixador Revolution 150ml", "preco": "21.000kz", "img": "/public/product5.png"}
+    ]
+  },
+  {
+    "categoria": "Bases",
+    "produtos": [
+      {"nome": "Base Super Stay 56", "preco": "24.000kz", "img": "/public/product6.png"},
+      {"nome": "Base Super Stay 60", "preco": "24.000kz", "img": "/public/product7.png"},
+      {"nome": "Base Super Stay 61", "preco": "24.000kz", "img": "/public/product8.png"},
+      {"nome": "Base Sephora", "preco": "28.000kz", "img": "/public/product9.png"},
+      {"nome": "Base Nix", "preco": "27.000kz", "img": "/public/product10.png"}
+    ]
+  },
+  {
+    "categoria": "Sombras",
+    "produtos": [
+      {"nome": "Sombras Revolution", "preco": "15.000kz", "img": "/public/product11.png"},
+      {"nome": "Sombras Juvia’s", "preco": "30.000kz", "img": "/public/product12.png"},
+      {"nome": "Sombras Morphe", "preco": "47.000kz", "img": "/public/product13.png"},
+      {"nome": "Sombras Annie’s", "preco": "34.000kz", "img": "/public/product14.png"},
+      {"nome": "Sombra Chocolate", "preco": "28.000kz", "img": "/public/product15.png"}
+    ]
+  },
+  {
+    "categoria": "Blush",
+    "produtos": [
+      {"nome": "Blush Revolution", "preco": "16.000kz", "img": "/public/product16.png"},
+      {"nome": "Blush Juvia’s", "preco": "", "img": "/public/product17.png"}
+    ]
+  },
+  {
+    "categoria": "Batons",
+    "produtos": [
+      {"nome": "Batom Mybilline", "preco": "18.000kz", "img": "/public/product18.png"},
+      {"nome": "Batom Nix", "preco": "10.000kz", "img": "/public/product19.png"}
+    ]
+  },
+  {
+    "categoria": "Água Thermal",
+    "produtos": [
+      {"nome": "Água Termal Avene", "preco": "19.000kz", "img": "/public/product20.png"},
+      {"nome": "Água Termal Soft 400ml", "preco": "12.000kz", "img": "/public/product21.png"},
+      {"nome": "Água Termal Soft 150ml", "preco": "8.000kz", "img": "/public/product22.png"}
+    ]
+  },
+  {
+    "categoria": "Água Micelar",
+    "produtos": [
+      {"nome": "Água Micelar Garnier", "preco": "10.000kz", "img": "/public/product23.png"},
+      {"nome": "Água Micelar Nívea", "preco": "12.000kz", "img": "/public/product24.png"}
+    ]
+  },
+  {
+    "categoria": "Tônico",
+    "produtos": [
+      {"nome": "Tônico Kiko", "preco": "13.000kz", "img": "/public/product25.png"}
+    ]
+  }
+]
