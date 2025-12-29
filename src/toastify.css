@@ -1,0 +1,28 @@
+/* Container geral */
+.Toastify__toast-container {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Toast sucesso */
+.Toastify__toast--success {
+  background: black;              /* fundo preto */
+  color: #D4AF37;                 /* texto dourado */
+  border: 2px solid #D4AF37;      /* borda dourada */
+  font-weight: 600;
+}
+
+/* Ícone (SVG interno) */
+.Toastify__toast--success .Toastify__toast-icon svg {
+  fill: #D4AF37 !important;       /* ícone dourado */
+  color: #D4AF37 !important;      /* fallback */
+}
+
+/* Barra de progresso */
+.Toastify__progress-bar--success {
+  background: #f7f751 !important; /* barra dourada */
+}
+
+/* Botão de fechar */
+.Toastify__close-button {
+  color: #D4AF37 !important;      /* dourado */
+}

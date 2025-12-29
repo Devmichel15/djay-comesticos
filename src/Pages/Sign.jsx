@@ -1,6 +1,9 @@
 import { FiUser, FiMail, FiPhone, FiLock } from "react-icons/fi";
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import "../toastify.css"; // arquivo customizado
 
 function Sign() {
   const [name, setName] = useState("");
@@ -11,10 +14,19 @@ function Sign() {
   const SignInUser = () => {
     if (name && email && number && pass) {
       console.log("usuario está inscrito");
+
+      toast.success("Conta criada com sucesso!", {
+        position: "top-center",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
-    console.log("preencha todos os campos")
+    else console.log("preencha todos os campos");
   };
-  
+
   return (
     <div className="relative flex flex-col md:flex-row min-h-screen items-center justify-center bg-black font-body">
       {/* Imagem */}
@@ -97,6 +109,7 @@ function Sign() {
             </Link>
           </p>
         </div>
+        <ToastContainer />
       </div>
     </div>
   );
