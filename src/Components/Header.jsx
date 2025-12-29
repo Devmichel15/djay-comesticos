@@ -1,16 +1,16 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { FaSearch, FaBars, FaShoppingCart, FaUser } from "react-icons/fa";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const cartCount = 2; // depois isso vem do estado/global
 
-  const toggleMenu = () => setIsMenuOpen(prev => !prev);
+  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white text-grayDark border-b border-goldSoft">
-      
       {/* Top info bar (opcional, mas premium) */}
       <div className="hidden md:block text-center text-xs py-2 bg-grayLight bg-black text-white">
         Envio rápido em Luanda • Produtos 100% originais
@@ -18,7 +18,6 @@ const Header = () => {
 
       {/* Top bar */}
       <div className="flex items-center justify-between py-3 md:py-4 px-4">
-        
         {/* Logo */}
         <img
           src="/logoCliente.jpeg"
@@ -40,10 +39,11 @@ const Header = () => {
 
         {/* Ícones */}
         <div className="flex items-center gap-4">
-          
           {/* Conta (desktop) */}
           <button className="hidden md:flex items-center gap-2 text-sm hover:text-gold transition cursor-pointer">
-            <FaUser fontSize={20}/>
+            <Link to="/login">
+              <FaUser fontSize={20} />
+            </Link>
           </button>
 
           {/* Carrinho */}
@@ -70,7 +70,6 @@ const Header = () => {
       {/* Menu mobile */}
       {isMenuOpen && (
         <nav className="md:hidden bg-white border-t border-goldSoft px-4 py-4">
-          
           {/* Busca mobile */}
           <div className="mb-4">
             <div className="relative">
