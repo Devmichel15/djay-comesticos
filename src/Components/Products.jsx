@@ -1,40 +1,99 @@
 import React from "react";
+import { motion } from "motion/react"
 import produtosData from "../produtos.json";
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.15, delayChildren: 0.3, ease: "easeOut" },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5 } },
+  hover: {
+    scale: 1.05,
+    boxShadow:
+      "0 10px 20px rgba(211, 84, 0, 0.4), 0 0 15px rgba(212, 175, 55, 0.6)",
+    transition: { duration: 0.3, yoyo: Infinity },
+  },
+};
 
 function Products() {
   return (
-    <div className="p-6 bg-white">
-      <h1 className="text-3xl font-bold text-center mb-8">Alguns Produtos</h1>
+    <div className="p-8 bg-gradient-to-b from-white via-gray-50 to-gray-100 min-h-screen">
+      <h1 className="text-4xl font-extrabold text-center mb-12 text-black drop-shadow-md">
+        Alguns Produtos
+      </h1>
 
       {produtosData.map((categoria, idx) => (
-        <div key={idx} className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">{categoria.categoria}</h2>
+        <div key={idx} className="mb-16">
+          <h2 className="text-3xl font-semibold mb-6 text-gray-900 border-b-4 border-gold-500 inline-block pb-2">
+            {categoria.categoria}
+          </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <motion.div
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
             {categoria.produtos.map((produto, pIdx) => (
-              <div
+              <motion.div
                 key={pIdx}
-                className="border rounded-lg shadow-md overflow-hidden bg-white flex flex-col items-center"
+                className="bg-white rounded-3xl shadow-lg overflow-hidden flex flex-col items-center max-w-xs mx-auto cursor-pointer"
+                variants={cardVariants}
+                whileHover="hover"
               >
-                <div className="w-full h-56 flex items-center justify-center bg-gray-100">
+                {/* Área da imagem com fundo cinza e cantos arredondados */}
+                <div className="w-full h-56 bg-gradient-to-tr from-gray-300 via-gray-400 to-gray-500 rounded-t-3xl flex items-center justify-center relative overflow-hidden">
                   {produto.img ? (
                     <img
                       src={produto.img}
                       alt={produto.nome}
-                      className="object-contain h-full"
+                      className="object-contain h-full rounded-t-3xl transition-transform duration-300 ease-in-out hover:scale-105"
                     />
                   ) : (
-                    <span className="text-gray-400">Imagem não disponível</span>
+                    <span className="text-gray-300 text-sm">
+                      Imagem não disponível
+                    </span>
                   )}
+
+                  {/* Marca dourada no canto superior direito */}
+                  <div className="absolute top-3 right-3 bg-gradient-to-br from-yellow-400 to-yellow-600 text-black font-bold text-xs px-3 py-1 rounded-full shadow-lg select-none pointer-events-none">
+                    Premium
+                  </div>
                 </div>
 
-                <div className="p-4 flex flex-col items-center">
-                  <h3 className="text-lg font-semibold mb-2 text-center">{produto.nome}</h3>
-                  <p className="text-gray-700 font-medium">{produto.preco}</p>
+                {/* Conteúdo textual */}
+                <div className="p-6 flex flex-col items-start w-full">
+                  <h3 className="text-lg font-mono font-semibold mb-3 text-black">
+                    {produto.nome}
+                  </h3>
+                  <p className="text-sm mb-6 text-gray-700 leading-relaxed font-sans">
+                    Se precisar, posso ajudar a encontrar links para download ou
+                    alternativas gratuitas. Quer?
+                  </p>
+
+                  {/* Preço e botão alinhados */}
+                  <div className="flex items-center justify-between w-full">
+                    <span className="font-mono text-lg font-semibold text-black">
+                      {produto.preco}
+                    </span>
+                    <button
+                      type="button"
+                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black rounded-full px-7 py-2 font-mono text-base font-semibold shadow-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors duration-300"
+                    >
+                      Comprar
+                    </button>
+                  </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       ))}
     </div>
