@@ -1,5 +1,5 @@
 import React from "react";
-import { motion } from "motion/react"
+import { motion } from "motion/react";
 import produtosData from "../produtos.json";
 
 const containerVariants = {
@@ -16,17 +16,16 @@ const cardVariants = {
   visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.5 } },
   hover: {
     scale: 1.05,
-    boxShadow:
-      "0 10px 20px rgba(211, 84, 0, 0.4), 0 0 15px rgba(212, 175, 55, 0.6)",
+    
     transition: { duration: 0.3, yoyo: Infinity },
   },
 };
 
 function Products() {
   return (
-    <div className="p-8 bg-gradient-to-b from-white via-gray-50 to-gray-100 min-h-screen">
+    <div className="p-8 bg-linear-to-b from-white via-gray-50 to-gray-100 min-h-screen">
       <h1 className="text-4xl font-extrabold text-center mb-12 text-black drop-shadow-md">
-        Alguns Produtos
+        Nossos Produtos
       </h1>
 
       {produtosData.map((categoria, idx) => (
@@ -49,7 +48,7 @@ function Products() {
                 whileHover="hover"
               >
                 {/* Área da imagem com fundo cinza e cantos arredondados */}
-                <div className="w-full h-56 bg-gradient-to-tr from-gray-300 via-gray-400 to-gray-500 rounded-t-3xl flex items-center justify-center relative overflow-hidden">
+                <div className="w-full h-56 bg-linear-to-tr from-gray-300 via-gray-400 to-gray-500 rounded-t-3xl flex items-center justify-center relative overflow-hidden">
                   {produto.img ? (
                     <img
                       src={produto.img}
@@ -63,7 +62,7 @@ function Products() {
                   )}
 
                   {/* Marca dourada no canto superior direito */}
-                  <div className="absolute top-3 right-3 bg-gradient-to-br from-yellow-400 to-yellow-600 text-black font-bold text-xs px-3 py-1 rounded-full shadow-lg select-none pointer-events-none">
+                  <div className="absolute top-3 right-3 bg-linear-to-br from-yellow-400 to-yellow-600 text-black font-bold text-xs px-3 py-1 rounded-full shadow-lg select-none pointer-events-none">
                     Premium
                   </div>
                 </div>
@@ -74,8 +73,7 @@ function Products() {
                     {produto.nome}
                   </h3>
                   <p className="text-sm mb-6 text-gray-700 leading-relaxed font-sans">
-                    Se precisar, posso ajudar a encontrar links para download ou
-                    alternativas gratuitas. Quer?
+                    {produto.copy}
                   </p>
 
                   {/* Preço e botão alinhados */}
@@ -85,7 +83,7 @@ function Products() {
                     </span>
                     <button
                       type="button"
-                      className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black rounded-full px-7 py-2 font-mono text-base font-semibold shadow-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors duration-300"
+                      className="bg-linear-to-r from-yellow-500 to-yellow-600 text-black rounded-full px-7 py-2 font-mono text-base font-semibold shadow-lg hover:from-yellow-600 hover:to-yellow-700 transition-colors duration-300"
                     >
                       Comprar
                     </button>
