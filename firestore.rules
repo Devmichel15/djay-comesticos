@@ -1,0 +1,73 @@
+// =============================================================================
+// FIRESTORE SECURITY RULES - Djay Cosméticos
+// =============================================================================
+// ✅ INSTRUÇÕES DE DEPLOYMENT:
+// 1. Copie TODO o conteúdo abaixo
+// 2. Firebase Console → Firestore Database → Rules
+// 3. Cole e clique em "Publish"
+// 4. Aguarde até aparecer "Published at [timestamp]"
+// =============================================================================
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // =========================================================================
+    // USERS COLLECTION - Cada usuário acessa APENAS seu próprio documento
+    // =========================================================================
+    match /users/{userId} {
+      // ✅ CREATE: Usuário criado pode criar seu próprio documento
+      allow create: if request.auth != null 
+                    && request.auth.uid == userId;
+      
+      // ✅ READ: Usuário pode ler seu próprio documento (necessário para onSnapshot)
+      allow read: if request.auth != null 
+                  && request.auth.uid == userId;
+      
+      // ✅ UPDATE: Usuário pode atualizar seu próprio documento
+      //    NÃO permitir mudança de 'role' (segurança)
+      allow update: if request.auth != null 
+                    && request.auth.uid == userId
+                    && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role']);
+      
+      // ❌ DELETE: Negar por padrão (dados do usuário não devem ser deletados facilmente)
+      allow delete: if false;
+    }
+    
+    // =========================================================================
+    // PRODUCTS COLLECTION - Catálogo público
+    // =========================================================================
+    match /produtos/{productId} {
+      // ✅ READ: Qualquer pessoa pode ler produtos (catálogo público)
+      allow read: if true;
+      
+      // ❌ WRITE: Apenas admins podem escrever/deletar (implementar depois)
+      // Por enquanto, escrever via Firestore Console
+      allow write: if false;
+    }
+    
+    // =========================================================================
+    // ORDERS COLLECTION (futuro)
+    // =========================================================================
+    match /orders/{orderId} {
+      // ✅ CREATE: Usuário pode criar suas próprias ordens
+      allow create: if request.auth != null 
+                    && request.resource.data.userId == request.auth.uid;
+      
+      // ✅ READ: Usuário pode ler suas próprias ordens
+      allow read: if request.auth != null 
+                  && resource.data.userId == request.auth.uid;
+      
+      // ❌ UPDATE/DELETE: Não permitido por enquanto
+      allow update, delete: if false;
+    }
+    
+    // =========================================================================
+    // REGRA PADRÃO: NEGAR TUDO QUE NÃO FOI EXPLICITAMENTE PERMITIDO
+    // =========================================================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -152,13 +152,8 @@
         "preco": "12.000kz",
         "img": "/public/product21.png",
         "copy": "Água Termal Soft 400ml proporciona hidratação profunda e sensação refrescante para o rosto."
-      },
-      {
-        "nome": "Água Termal Soft 150ml",
-        "preco": "8.000kz",
-        "img": "/public/product22.png",
-        "copy": "Versão prática da Água Termal Soft 150ml para levar onde quiser e manter a pele sempre hidratada."
       }
+
     ]
   },
   {
@@ -167,13 +162,13 @@
       {
         "nome": "Água Micelar Garnier",
         "preco": "10.000kz",
-        "img": "/public/product23.png",
+        "img": "/public/product22.png",
         "copy": "Limpeza eficaz e suave com a Água Micelar Garnier, que remove impurezas sem agredir a pele."
       },
       {
         "nome": "Água Micelar Nívea",
         "preco": "12.000kz",
-        "img": "/public/product24.png",
+        "img": "/public/product23.png",
         "copy": "Água Micelar Nívea limpa e tonifica, deixando a pele fresca e preparada para o dia."
       }
     ]
@@ -184,7 +179,7 @@
       {
         "nome": "Tônico Kiko",
         "preco": "13.000kz",
-        "img": "/public/product25.png",
+        "img": "/public/product24.png",
         "copy": "Tônico Kiko ajuda a equilibrar o pH da pele, reduzindo oleosidade e preparando para a hidratação."
       }
     ]
