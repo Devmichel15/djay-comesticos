@@ -5,7 +5,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { 
+import {
   initializeFirestore,
   persistentLocalCache,
   persistentMultipleTabManager,
@@ -14,12 +14,20 @@ import { getStorage } from "firebase/storage";
 
 // Firebase Configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCnjZStHhSpK1OzWa9klsL249xts3TJfI8",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "backend-djay.firebaseapp.com",
+  apiKey:
+    import.meta.env.VITE_FIREBASE_API_KEY ||
+    "AIzaSyCnjZStHhSpK1OzWa9klsL249xts3TJfI8",
+  authDomain:
+    import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "backend-djay.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "backend-djay",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "backend-djay.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1020937753704",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:1020937753704:web:efaef92999c8c12a2497dd",
+  storageBucket:
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
+    "backend-djay.firebasestorage.app",
+  messagingSenderId:
+    import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1020937753704",
+  appId:
+    import.meta.env.VITE_FIREBASE_APP_ID ||
+    "1:1020937753704:web:efaef92999c8c12a2497dd",
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-3ZX7MLRF4X",
 };
 
@@ -37,8 +45,6 @@ const db = initializeFirestore(app, {
     tabManager: persistentMultipleTabManager(),
   }),
 });
-
-console.info("✅ Firestore initialized with persistent cache");
 
 // Initialize Firebase Storage
 const storage = getStorage(app);

@@ -1,5 +1,18 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
-import { onAuthStateChanged, signup, login, logout, getAuthError } from "../firebase/auth";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
+import {
+  onAuthStateChanged,
+  signup,
+  login,
+  logout,
+  getAuthError,
+} from "../firebase/auth";
 import { subscribeToUser, updateUserCart } from "../firebase/firestore";
 
 // WhatsApp number
@@ -15,10 +28,10 @@ export function AuthProvider({ children }) {
   // Auth state (from Firebase Auth)
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+
   // Track if we've received first auth state
   const initialized = useRef(false);
-  
+
   // User data subscription cleanup
   const userUnsubscribe = useRef(null);
 
@@ -26,18 +39,13 @@ export function AuthProvider({ children }) {
   // AUTH STATE LISTENER (runs once on mount)
   // ========================================================================
   useEffect(() => {
-    console.info("🔄 Auth listener setup");
-
     const unsubscribe = onAuthStateChanged((authUser) => {
-      console.info("📡 Auth state:", authUser ? authUser.uid : "null");
-      
       setUser(authUser);
       setLoading(false);
       initialized.current = true;
     });
 
     return () => {
-      console.info("🔄 Auth listener cleanup");
       unsubscribe();
     };
   }, []);
@@ -54,8 +62,6 @@ export function AuthProvider({ children }) {
 
     if (!user?.uid) return;
 
-    console.info("📡 User subscription:", user.uid);
-
     // Subscribe to user document changes
     userUnsubscribe.current = subscribeToUser(
       user.uid,
@@ -71,9 +77,7 @@ export function AuthProvider({ children }) {
           }));
         }
       },
-      (error) => {
-        console.warn("User subscription error:", error.message);
-      }
+      (error) => {},
     );
 
     return () => {
@@ -89,14 +93,14 @@ export function AuthProvider({ children }) {
   // ========================================================================
   const handleSignup = useCallback(async (email, password, displayName) => {
     setLoading(true);
-    
+
     try {
       const userData = await signup(email, password, displayName);
       setUser(userData);
-      
+
       // Handle pending checkout (non-blocking)
       handlePendingCheckout(userData);
-      
+
       return userData;
     } catch (error) {
       const message = getAuthError(error.code) || error.message;
@@ -111,14 +115,14 @@ export function AuthProvider({ children }) {
   // ========================================================================
   const handleLogin = useCallback(async (email, password) => {
     setLoading(true);
-    
+
     try {
       const userData = await login(email, password);
       setUser(userData);
-      
+
       // Handle pending checkout (non-blocking)
       handlePendingCheckout(userData);
-      
+
       return userData;
     } catch (error) {
       const message = getAuthError(error.code) || error.message;
@@ -133,7 +137,7 @@ export function AuthProvider({ children }) {
   // ========================================================================
   const handleLogout = useCallback(async () => {
     setLoading(true);
-    
+
     try {
       await logout();
       setUser(null);

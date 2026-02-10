@@ -13,7 +13,7 @@ import { auth } from "./firebase";
 import { getOrCreateUser, saveUser } from "./firestore";
 
 // Admin emails
-const ADMIN_EMAILS = ["michel15cesar@gmail.com"];
+const ADMIN_EMAILS = ["djaycosmeticos@gmail.com"];
 const isAdmin = (email) => ADMIN_EMAILS.includes(email?.toLowerCase());
 
 // ============================================================================
@@ -25,23 +25,18 @@ const isAdmin = (email) => ADMIN_EMAILS.includes(email?.toLowerCase());
  * 2. updateProfile → displayName atualizado ✅
  * 3. saveUser → documento criado no Firestore ✅
  * 4. Retorna data imediatamente (Firestore synca em background)
- * 
+ *
  * ⚠️ IMPORTANTE: Não aguardar saveUser em modo BLOCKING
  */
 export const signup = async (email, password, displayName) => {
-  console.info("🔐 Signup iniciado:", email);
-
   // ✅ PASSO 1: Criar usuário no Firebase Auth
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
-  console.info("✅ Auth user created:", user.uid);
 
   // ✅ PASSO 2: Atualizar profile no Auth
   await updateProfile(user, { displayName });
-  console.info("✅ Auth profile updated");
 
   // ✅ PASSO 3: Determinar role
   const role = isAdmin(email) ? "admin" : "user";
-  console.info("✅ Role determined:", role);
 
   // ✅ PASSO 4: Salvar no Firestore (NON-BLOCKING)
   // NÃO aguardar para não bloquear o signup
@@ -53,8 +48,6 @@ export const signup = async (email, password, displayName) => {
   }).catch((e) => {
     console.error("⚠️ Firestore save error (will retry):", e.message);
   });
-
-  console.info("✅ Signup completo - retornando dados");
 
   // ✅ PASSO 5: Retornar com dados básicos (Firestore vai sincronizar)
   return {
@@ -76,11 +69,8 @@ export const signup = async (email, password, displayName) => {
  * 3. Retorna user merged (Auth + Firestore)
  */
 export const login = async (email, password) => {
-  console.info("🔐 Login iniciado:", email);
-
   // ✅ PASSO 1: Autenticar
   const { user } = await signInWithEmailAndPassword(auth, email, password);
-  console.info("✅ Auth login successful:", user.uid);
 
   // ✅ PASSO 2: Determinar role padrão
   const defaultRole = isAdmin(email) ? "admin" : "user";
@@ -91,10 +81,8 @@ export const login = async (email, password) => {
     user.uid,
     user.email,
     user.displayName,
-    defaultRole
+    defaultRole,
   );
-
-  console.info("✅ User data loaded:", user.uid);
 
   // ✅ PASSO 4: Retornar merged data
   return {
@@ -112,7 +100,6 @@ export const login = async (email, password) => {
 // ============================================================================
 export const logout = async () => {
   await signOut(auth);
-  console.info("✅ Logged out");
 };
 
 // ============================================================================
@@ -120,7 +107,7 @@ export const logout = async () => {
 // ============================================================================
 /**
  * Listen to auth state changes
- * 
+ *
  * IMPORTANT: This callback should fire FAST
  * - First: Return basic auth data immediately
  * - Then: Firestore data loads in background via subscription
@@ -128,12 +115,9 @@ export const logout = async () => {
 export const onAuthStateChanged = (callback) => {
   return auth.onAuthStateChanged(async (user) => {
     if (!user) {
-      console.info("👤 Logged out");
       callback(null);
       return;
     }
-
-    console.info("👤 Logged in:", user.uid);
 
     // Determine default role
     const defaultRole = isAdmin(user.email) ? "admin" : "user";
@@ -144,7 +128,7 @@ export const onAuthStateChanged = (callback) => {
         user.uid,
         user.email,
         user.displayName,
-        defaultRole
+        defaultRole,
       );
 
       callback({
@@ -157,8 +141,7 @@ export const onAuthStateChanged = (callback) => {
       });
     } catch (error) {
       // On error, still return basic user data
-      console.warn("⚠️ Firestore error, using basic data:", error.message);
-      
+
       callback({
         uid: user.uid,
         email: user.email,

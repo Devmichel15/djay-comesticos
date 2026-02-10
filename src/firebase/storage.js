@@ -1,8 +1,8 @@
 // ============================================================================
-// Firebase Storage Functions
+// Firebase Storage Functions - CORRECT FLOW
 // ============================================================================
-// Upload, update and delete product images from Firebase Storage
-// Images are stored at: /products/{productId}/image.png
+// Upload product images AFTER creating the product document
+// Images are stored at: /produtos/{productId}/image.png
 
 import {
   ref,
@@ -10,22 +10,32 @@ import {
   getDownloadURL,
   deleteObject,
 } from "firebase/storage";
-import { storage } from "./firebase";
+import { storage, auth } from "./firebase";
 
 // ============================================================================
-// UPLOAD PRODUCT IMAGE
+// UPLOAD PRODUCT IMAGE (AFTER PRODUCT CREATION)
 // ============================================================================
 /**
  * Upload a product image to Firebase Storage
- * Stores at: /products/{productId}/image.png
+ * ⚠️ IMPORTANT: Only call this AFTER creating the product in Firestore
+ * Stores at: /produtos/{productId}/image.png
  * @param {File} file - Image file to upload
- * @param {string} productId - Product ID (used for organizing storage)
+ * @param {string} productId - Product ID from Firestore
  * @returns {Promise<string>} Public download URL of the uploaded image
  */
 export const uploadProductImage = async (file, productId) => {
   try {
+    // ✅ CRITICAL: Verify authentication first
+    if (!auth.currentUser) {
+      throw new Error("Você precisa estar autenticado para fazer upload");
+    }
+
     if (!file) {
       throw new Error("Nenhum arquivo fornecido");
+    }
+
+    if (!productId) {
+      throw new Error("productId é obrigatório para upload");
     }
 
     // Validate file is an image
@@ -38,8 +48,8 @@ export const uploadProductImage = async (file, productId) => {
       throw new Error("A imagem não pode ser maior que 5MB");
     }
 
-    // Create storage reference
-    const fileRef = ref(storage, `products/${productId}/image.png`);
+    // ✅ CORRECT PATH: Uses "produtos" to match Firestore collection
+    const fileRef = ref(storage, `produtos/${productId}/image.png`);
 
     // Upload file
     await uploadBytes(fileRef, file);
@@ -48,7 +58,6 @@ export const uploadProductImage = async (file, productId) => {
     const downloadURL = await getDownloadURL(fileRef);
     return downloadURL;
   } catch (error) {
-    console.error("Image upload error:", error.message);
     throw new Error(`Erro ao fazer upload: ${error.message}`);
   }
 };
@@ -64,19 +73,22 @@ export const uploadProductImage = async (file, productId) => {
  */
 export const updateProductImage = async (productId, file) => {
   try {
+    // Verify authentication
+    if (!auth.currentUser) {
+      throw new Error("Você precisa estar autenticado");
+    }
+
     // Delete old image if it exists
     try {
-      const oldFileRef = ref(storage, `products/${productId}/image.png`);
+      const oldFileRef = ref(storage, `produtos/${productId}/image.png`);
       await deleteObject(oldFileRef);
     } catch (err) {
       // File might not exist, which is okay
-      console.warn("Old image not found or could not be deleted");
     }
 
     // Upload new image
     return await uploadProductImage(file, productId);
   } catch (error) {
-    console.error("Image update error:", error.message);
     throw new Error(`Erro ao atualizar imagem: ${error.message}`);
   }
 };
@@ -91,16 +103,19 @@ export const updateProductImage = async (productId, file) => {
  */
 export const deleteProductImage = async (productId) => {
   try {
-    const fileRef = ref(storage, `products/${productId}/image.png`);
+    if (!auth.currentUser) {
+      throw new Error("Você precisa estar autenticado");
+    }
+
+    const fileRef = ref(storage, `produtos/${productId}/image.png`);
     await deleteObject(fileRef);
   } catch (error) {
-    console.error("Image delete error:", error.message);
     throw new Error(`Erro ao deletar imagem: ${error.message}`);
   }
 };
 
 // ============================================================================
-// GET IMAGE URL (if you need to fetch an existing URL)
+// GET IMAGE URL
 // ============================================================================
 /**
  * Get the public download URL of a product image
@@ -109,11 +124,10 @@ export const deleteProductImage = async (productId) => {
  */
 export const getProductImageURL = async (productId) => {
   try {
-    const fileRef = ref(storage, `products/${productId}/image.png`);
+    const fileRef = ref(storage, `produtos/${productId}/image.png`);
     const downloadURL = await getDownloadURL(fileRef);
     return downloadURL;
   } catch (error) {
-    console.error("Get image URL error:", error.message);
     throw new Error("Imagem não encontrada");
   }
 };

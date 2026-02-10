@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import PremiumNavbar from "../Components/PremiumNavbar";
-import Hero3D from "../Components/Hero3D";
-import FeatureGrid from "../Components/FeatureGrid";
-import TransitionSection from "../Components/TransitionSection";
+import PremiumNavbar from "../components/PremiumNavbar";
+import Hero3D from "../components/Hero3D";
+import FeatureGrid from "../components/FeatureGrid";
+import TransitionSection from "../components/TransitionSection";
 import BestSellersSection from "../Components/BestSellersSection";
-import FooterCTA from "../Components/FooterCTA";
+import FooterCTA from "../components/FooterCTA";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,7 +15,7 @@ function Home() {
   // Clean up any potential overflow issues from previous installs
   useEffect(() => {
     window.scrollTo(0, 0);
-    
+
     // Smooth scroll behavior
     gsap.config({
       nullTargetWarn: false,
@@ -28,7 +28,7 @@ function Home() {
 
     return () => {
       clearTimeout(timer);
-      ScrollTrigger.getAll().forEach(trigger => trigger.kill());
+      ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, []);
 

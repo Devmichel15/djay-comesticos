@@ -101,7 +101,8 @@ const BestSellersSection = () => {
   useEffect(() => {
     const ctx = gsap.context(() => {
       // Título
-      gsap.fromTo(".bestseller-title",
+      gsap.fromTo(
+        ".bestseller-title",
         { y: 40, opacity: 0 },
         {
           y: 0,
@@ -112,11 +113,12 @@ const BestSellersSection = () => {
             trigger: titleRef.current,
             start: "top 85%",
           },
-        }
+        },
       );
 
       // Subtítulo
-      gsap.fromTo(".bestseller-subtitle",
+      gsap.fromTo(
+        ".bestseller-subtitle",
         { y: 20, opacity: 0 },
         {
           y: 0,
@@ -128,11 +130,12 @@ const BestSellersSection = () => {
             trigger: titleRef.current,
             start: "top 85%",
           },
-        }
+        },
       );
 
       // Cards com stagger simples
-      gsap.fromTo(".product-card",
+      gsap.fromTo(
+        ".product-card",
         { y: 30, opacity: 0 },
         {
           y: 0,
@@ -144,9 +147,8 @@ const BestSellersSection = () => {
             trigger: gridRef.current,
             start: "top 85%",
           },
-        }
+        },
       );
-
     }, sectionRef);
 
     return () => ctx.revert();
@@ -195,7 +197,7 @@ const BestSellersSection = () => {
     setWishlist((prev) =>
       prev.includes(productId)
         ? prev.filter((id) => id !== productId)
-        : [...prev, productId]
+        : [...prev, productId],
     );
   };
 
@@ -208,7 +210,7 @@ const BestSellersSection = () => {
         categoria: product.categoria,
         copy: product.copy,
       },
-      1
+      1,
     );
   };
 
@@ -219,7 +221,10 @@ const BestSellersSection = () => {
 
       <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div ref={titleRef} className="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
+        <div
+          ref={titleRef}
+          className="mb-16 flex flex-col md:flex-row md:items-end md:justify-between gap-6"
+        >
           <div>
             <span className="bestseller-subtitle text-gold text-[11px] font-mono uppercase tracking-[0.3em] mb-4 block">
               Mais Procurados
@@ -228,7 +233,7 @@ const BestSellersSection = () => {
               Best Sellers
             </h2>
           </div>
-          
+
           <button
             onClick={() => navigate("/")}
             className="text-white/50 text-xs uppercase tracking-[0.2em] hover:text-gold transition-colors border-b border-white/20 hover:border-gold pb-1 self-start md:self-auto"
@@ -237,8 +242,11 @@ const BestSellersSection = () => {
           </button>
         </div>
 
-        {/* Grid Desktop */}
-        <div ref={gridRef} className="hidden sm:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+        {/* Grid Responsive */}
+        <div
+          ref={gridRef}
+          className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5"
+        >
           {products.map((product) => (
             <ProductCard
               key={product.productId}
@@ -249,25 +257,6 @@ const BestSellersSection = () => {
               onAddToCart={handleAddToCart}
             />
           ))}
-        </div>
-
-        {/* Mobile Scroll */}
-        <div className="sm:hidden">
-          <div className="overflow-x-auto -mx-6 px-6 pb-4 scrollbar-hide">
-            <div className="flex gap-4">
-              {products.map((product) => (
-                <div key={product.productId} className="w-64 shrink-0">
-                  <ProductCard
-                    product={product}
-                    isWishlisted={wishlist.includes(product.productId)}
-                    onToggleWishlist={toggleWishlist}
-                    onNavigate={navigate}
-                    onAddToCart={handleAddToCart}
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </section>

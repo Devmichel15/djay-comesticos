@@ -42,9 +42,10 @@ service cloud.firestore {
       // ✅ READ: Qualquer pessoa pode ler produtos (catálogo público)
       allow read: if true;
       
-      // ❌ WRITE: Apenas admins podem escrever/deletar (implementar depois)
-      // Por enquanto, escrever via Firestore Console
-      allow write: if false;
+      // ✅ WRITE: Apenas admins podem criar/atualizar/deletar produtos
+      // Verifica se o usuário autenticado tem role == "admin" no documento users/{uid}
+      allow create, update, delete: if request.auth != null 
+                                     && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
     
     // =========================================================================
