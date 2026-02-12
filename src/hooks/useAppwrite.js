@@ -1,18 +1,21 @@
 // ============================================================================
-// useFirebase (Appwrite Implementation)
+// useAppwrite (Formerly useFirebase)
 // ============================================================================
-// Mapped to maintain compatibility with existing components
-// Uses Appwrite services under the hood
 
 import { useState } from "react";
-import { uploadProductImage, deleteProductImage } from "../appwrite/storage";
+import {
+  uploadProductImage,
+  deleteProductImage,
+  getProductImageUrl,
+} from "../appwrite/storage";
 import dataService from "../appwrite/databases";
-import { ID } from "appwrite";
+import { useAuth } from "../context/AuthContext";
 
-export const useFirebase = () => {
+export const useAppwrite = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
+  const { user } = useAuth();
 
   // ========================================================================
   // UPLOAD IMAGE
@@ -21,8 +24,8 @@ export const useFirebase = () => {
     try {
       setError(null);
       setLoading(true);
-      const imageUrl = await uploadProductImage(file);
-      return imageUrl;
+      const result = await uploadProductImage(file);
+      return result; // Returns { fileId, url }
     } catch (err) {
       const errorMessage = err.message || "Erro ao fazer upload da imagem";
       setError(errorMessage);
@@ -30,16 +33,6 @@ export const useFirebase = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // ========================================================================
-  // UPDATE IMAGE
-  // ========================================================================
-  const updateImage = async (productId, file) => {
-    // Appwrite doesn't easily support overwriting by ID without deleting first
-    // or using a new ID. For simplicity, we upload new and return URL.
-    // In a real app, we might delete the old file if we tracked fileId.
-    return uploadImage(file);
   };
 
   // ========================================================================
@@ -65,12 +58,11 @@ export const useFirebase = () => {
       setError(null);
       setLoading(true);
 
-      // Adapt flat data to service expectation
       const product = await dataService.createProduct({
         ...productData,
-        userId: "admin", // Should come from context, but handled in service or passed here
+        userId: user?.$id || "admin",
       });
-      return product.$id;
+      return product;
     } catch (err) {
       const errorMessage = err.message || "Erro ao criar o produto";
       setError(errorMessage);
@@ -88,60 +80,19 @@ export const useFirebase = () => {
       setError(null);
       setLoading(true);
       const response = await dataService.getProducts();
-      // Map Appwrite documents to expected format
+
       const mapped = response.documents.map((doc) => ({
         ...doc,
         id: doc.$id,
+        imageUrl: getProductImageUrl(doc.imageId), // Use the helper for absolute URL
       }));
       setProducts(mapped);
       return mapped;
     } catch (err) {
       const errorMessage = err.message || "Erro ao buscar produtos";
       setError(errorMessage);
-      // Don't throw to avoid crashing UI on initial load
       console.error(errorMessage);
       return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ========================================================================
-  // FETCH SINGLE PRODUCT
-  // ========================================================================
-  const fetchProduct = async (productId) => {
-    try {
-      setError(null);
-      setLoading(true);
-      const doc = await dataService.getProduct(productId);
-      return { ...doc, id: doc.$id };
-    } catch (err) {
-      const errorMessage = err.message || "Erro ao buscar o produto";
-      setError(errorMessage);
-      throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ========================================================================
-  // FETCH PRODUCTS BY CATEGORY
-  // ========================================================================
-  const fetchProductsByCategory = async (category) => {
-    try {
-      setError(null);
-      setLoading(true);
-      const response = await dataService.getProductsByCategory(category);
-      const mapped = response.documents.map((doc) => ({
-        ...doc,
-        id: doc.$id,
-      }));
-      return mapped;
-    } catch (err) {
-      const errorMessage =
-        err.message || "Erro ao buscar produtos da categoria";
-      setError(errorMessage);
-      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -171,53 +122,24 @@ export const useFirebase = () => {
   // ========================================================================
   // DELETE PRODUCT
   // ========================================================================
-  const removeProduct = async (productId) => {
+  const removeProduct = async (productId, imageId) => {
     try {
       setError(null);
       setLoading(true);
+
+      // Delete from DB
       await dataService.deleteProduct(productId);
+
+      // Delete Image if ID exists
+      if (imageId) {
+        await removeImage(imageId);
+      }
+
       setProducts((prev) => prev.filter((p) => p.id !== productId));
     } catch (err) {
       const errorMessage = err.message || "Erro ao deletar o produto";
       setError(errorMessage);
       throw new Error(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ========================================================================
-  // SEARCH PRODUCTS
-  // ========================================================================
-  const search = async (searchTerm) => {
-    try {
-      setError(null);
-      setLoading(true);
-      const response = await dataService.searchProducts(searchTerm);
-      return response.documents.map((doc) => ({ ...doc, id: doc.$id }));
-    } catch (err) {
-      const errorMessage = err.message || "Erro ao buscar produtos";
-      setError(errorMessage);
-      // throw new Error(errorMessage);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ========================================================================
-  // GET PRODUCTS IN STOCK
-  // ========================================================================
-  const fetchInStockProducts = async () => {
-    try {
-      setError(null);
-      setLoading(true);
-      const response = await dataService.getProductsInStock();
-      return response.documents.map((doc) => ({ ...doc, id: doc.$id }));
-    } catch (err) {
-      const errorMessage = err.message || "Erro ao buscar produtos em estoque";
-      setError(errorMessage);
-      return [];
     } finally {
       setLoading(false);
     }
@@ -230,16 +152,11 @@ export const useFirebase = () => {
     loading,
     error,
     uploadImage,
-    updateImage,
     removeImage,
     createProduct,
     fetchAllProducts,
-    fetchProduct,
-    fetchProductsByCategory,
     updateProductData,
     removeProduct,
-    search,
-    fetchInStockProducts,
     clearError,
   };
 };

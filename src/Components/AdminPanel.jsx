@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useFirebase } from "../hooks/useFirebase";
+import { useAppwrite } from "../hooks/useAppwrite";
 import { useAuth } from "../context/AuthContext";
 import {
   LayoutDashboard,
@@ -26,7 +26,7 @@ export default function AdminPanel() {
     createProduct,
     uploadImage,
     removeProduct,
-  } = useFirebase();
+  } = useAppwrite();
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -59,9 +59,12 @@ export default function AdminPanel() {
   const handleCreate = async (e) => {
     e.preventDefault();
     try {
-      const tempId = `temp-${Date.now()}`;
-      const imageUrl = file ? await uploadImage(file, tempId) : "";
-      await createProduct({ ...form, imageUrl });
+      let imageId = "";
+      if (file) {
+        const uploadResult = await uploadImage(file);
+        imageId = uploadResult.fileId;
+      }
+      await createProduct({ ...form, imageId });
       setForm({
         name: "",
         price: 0,
@@ -78,10 +81,10 @@ export default function AdminPanel() {
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, imageId) => {
     if (!confirm("Deletar produto?")) return;
     try {
-      await removeProduct(id);
+      await removeProduct(id, imageId);
       await fetchAllProducts();
     } catch (err) {
       alert(err.message || "Erro ao deletar");
@@ -328,7 +331,7 @@ export default function AdminPanel() {
                     )}
                     <div className="absolute top-2 right-2">
                       <button
-                        onClick={() => handleDelete(p.id)}
+                        onClick={() => handleDelete(p.id, p.imageId)}
                         className="bg-red-500/80 p-2 rounded-lg hover:bg-red-600 transition-all"
                       >
                         <Trash2 className="w-4 h-4 text-white" />

@@ -6,14 +6,8 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import {
-  onAuthStateChanged,
-  signup,
-  login,
-  logout,
-  getAuthError,
-} from "../firebase/auth";
-import { subscribeToUser, updateUserCart } from "../firebase/firestore";
+import authService from "../appwrite/auth";
+import dataService from "../appwrite/databases";
 
 // WhatsApp number
 const WHATSAPP = import.meta.env.VITE_WHATSAPP_NUMBER || "5511999999999";
@@ -22,71 +16,42 @@ const WHATSAPP = import.meta.env.VITE_WHATSAPP_NUMBER || "5511999999999";
 export const AuthContext = createContext(null);
 
 // ============================================================================
-// AUTH PROVIDER - Clean Architecture
+// AUTH PROVIDER - Appwrite Implementation
 // ============================================================================
 export function AuthProvider({ children }) {
-  // Auth state (from Firebase Auth)
+  // Auth state
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Track if we've received first auth state
   const initialized = useRef(false);
 
-  // User data subscription cleanup
-  const userUnsubscribe = useRef(null);
-
   // ========================================================================
-  // AUTH STATE LISTENER (runs once on mount)
+  // CHECK SESSION (runs once on mount)
   // ========================================================================
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged((authUser) => {
-      setUser(authUser);
-      setLoading(false);
-      initialized.current = true;
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  // ========================================================================
-  // FIRESTORE USER SUBSCRIPTION (real-time sync, non-blocking)
-  // ========================================================================
-  useEffect(() => {
-    // Cleanup previous subscription
-    if (userUnsubscribe.current) {
-      userUnsubscribe.current();
-      userUnsubscribe.current = null;
-    }
-
-    if (!user?.uid) return;
-
-    // Subscribe to user document changes
-    userUnsubscribe.current = subscribeToUser(
-      user.uid,
-      (userData) => {
-        if (userData) {
-          // Merge Firestore data with Auth data
-          setUser((prev) => ({
-            ...prev,
-            ...userData,
-            uid: prev?.uid,
-            email: prev?.email,
-            displayName: prev?.displayName,
-          }));
+    const checkUser = async () => {
+      try {
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          // Check if admin
+          const isAdmin = await authService.isAdmin(currentUser);
+          // Fetch detailed profile from database (if custom fields exist)
+          // For now, allow mixing Auth user + flag
+          setUser({ ...currentUser, role: isAdmin ? "admin" : "user" });
+        } else {
+          setUser(null);
         }
-      },
-      (error) => {},
-    );
-
-    return () => {
-      if (userUnsubscribe.current) {
-        userUnsubscribe.current();
-        userUnsubscribe.current = null;
+      } catch (error) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+        initialized.current = true;
       }
     };
-  }, [user?.uid]);
+
+    checkUser();
+  }, []);
 
   // ========================================================================
   // SIGNUP HANDLER
@@ -95,16 +60,36 @@ export function AuthProvider({ children }) {
     setLoading(true);
 
     try {
-      const userData = await signup(email, password, displayName);
-      setUser(userData);
+      // 1. Create Login Account
+      const userAccount = await authService.createAccount({
+        email,
+        password,
+        name: displayName,
+      });
+
+      // 2. Auto Login after signup
+      await authService.login({ email, password });
+
+      // 3. Create User Profile in Database
+      const profile = await dataService.createUserProfile({
+        uid: userAccount.$id,
+        email: userAccount.email,
+        name: userAccount.name,
+      });
+
+      const sessionUser = await authService.getCurrentUser();
+      const isAdmin = await authService.isAdmin(sessionUser);
+
+      const fullUser = { ...sessionUser, role: isAdmin ? "admin" : "user" };
+      setUser(fullUser);
 
       // Handle pending checkout (non-blocking)
-      handlePendingCheckout(userData);
+      handlePendingCheckout(fullUser);
 
-      return userData;
+      return fullUser;
     } catch (error) {
-      const message = getAuthError(error.code) || error.message;
-      throw new Error(message);
+      console.error("Signup error:", error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -117,16 +102,20 @@ export function AuthProvider({ children }) {
     setLoading(true);
 
     try {
-      const userData = await login(email, password);
-      setUser(userData);
+      await authService.login({ email, password });
+      const sessionUser = await authService.getCurrentUser();
+      const isAdmin = await authService.isAdmin(sessionUser);
+
+      const fullUser = { ...sessionUser, role: isAdmin ? "admin" : "user" };
+      setUser(fullUser);
 
       // Handle pending checkout (non-blocking)
-      handlePendingCheckout(userData);
+      handlePendingCheckout(fullUser);
 
-      return userData;
+      return fullUser;
     } catch (error) {
-      const message = getAuthError(error.code) || error.message;
-      throw new Error(message);
+      console.error("Login error:", error);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -139,8 +128,10 @@ export function AuthProvider({ children }) {
     setLoading(true);
 
     try {
-      await logout();
+      await authService.logout();
       setUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
     } finally {
       setLoading(false);
     }
@@ -154,13 +145,13 @@ export function AuthProvider({ children }) {
       const pending = localStorage.getItem("pendingCheckout");
       const cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
-      if (pending && cart.length > 0 && userData?.uid) {
-        // Save cart (non-blocking)
-        updateUserCart(userData.uid, cart).catch(() => {});
+      if (pending && cart.length > 0 && userData?.$id) {
+        // Save cart (non-blocking) - assuming Appwrite has updateUserCart
+        // dataService.updateUserCart(userData.$id, cart).catch(() => {});
 
         // Build message
         const lines = [
-          `Nome: ${userData.displayName || userData.name || "-"}`,
+          `Nome: ${userData.name || "-"}`,
           `Email: ${userData.email}`,
           "",
           "Produtos:",

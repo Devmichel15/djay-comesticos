@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { useAuth } from "./AuthContext";
-import { updateUserCart, subscribeToUserCart } from "../firebase/firestore";
+import dataService from "../appwrite/databases";
 
 const CartContext = createContext();
 
@@ -24,7 +24,7 @@ export const CartProvider = ({ children }) => {
   const unsubscribeCart = useRef(null);
 
   // =========================================================================
-  // SUBSCRIBE TO FIRESTORE CART (Real-time sync)
+  // SUBSCRIBE TO APPWRITE CART (Real-time sync)
   // =========================================================================
   useEffect(() => {
     // Cleanup previous subscription
@@ -33,24 +33,45 @@ export const CartProvider = ({ children }) => {
       unsubscribeCart.current = null;
     }
 
-    // Only subscribe if user is logged in
-    if (!user?.uid) {
-      setCartItems([]);
+    // Only subscribe if user is logged in (and has a valid ID)
+    // Appwrite user ID is usually $id, but we mapped it to uid or we used ...currentUser
+    // AuthContext sets user = { ...currentUser, role... }. currentUser has $id.
+    // However, dataService expects 'uid'.
+    // Let's check what AuthContext puts in 'user'.
+    // It puts { ...sessionUser, role }. sessionUser has $id.
+    // So user.$id is the ID.
+    // BUT AuthContext also had "uid: prev?.uid" in the merge?
+    // In my new AuthContext, I am just setting user = { ...currentUser, role }.
+    // So I should use user.$id.
+
+    // Safety check: existing code might use user.uid. I should probably ensure user.uid exists or update code to use user.$id.
+    // Let's map user.uid to user.$id in AuthContext or here.
+    // Better to use user.$id if available, or fallback.
+    const userId = user?.$id || user?.uid;
+
+    if (!userId) {
+      // If logging out, clear cart if desired, or keep local
+      // setCartItems([]);
+      // Actually usually we want to keep local cart if they log out?
+      // But typically we clear or keep.
+      // let's follow previous logic:
+      // if (!user?.uid) { setCartItems([]); return; }
+      // But wait, the previous logic was: Non-logged in users HAVE a local cart.
+      // The subscription is only for syncing when logged in.
       return;
     }
 
     // Subscribe to user's cart
-    unsubscribeCart.current = subscribeToUserCart(
-      user.uid,
+    unsubscribeCart.current = dataService.subscribeToCart(
+      userId,
       (cartData) => {
         if (cartData && Array.isArray(cartData)) {
           setCartItems(cartData);
         } else {
+          // If cart is empty or invalid, maybe don't overwrite if we have local items?
+          // No, server is truth.
           setCartItems([]);
         }
-        setIsLoading(false);
-      },
-      (error) => {
         setIsLoading(false);
       },
     );
@@ -61,15 +82,17 @@ export const CartProvider = ({ children }) => {
         unsubscribeCart.current = null;
       }
     };
-  }, [user?.uid]);
+  }, [user]);
 
   // =========================================================================
-  // ADD TO CART (Update Firestore + Local)
+  // ADD TO CART (Update Appwrite + Local)
   // =========================================================================
   const addToCart = useCallback(
     async (product, quantity = 1) => {
+      const userId = user?.$id || user?.uid;
+
       // ✅ Check if user is logged in
-      if (!user?.uid) {
+      if (!userId) {
         // Still save to local state for logged-out users
         setCartItems((prevItems) => {
           const existingItem = prevItems.find(
@@ -98,8 +121,62 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
-      // ✅ For logged-in users, update Firestore
+      // ✅ For logged-in users, update Appwrite
       try {
+        // We need to calculate the NEW cart state to send to server
+        // We can't use setCartItems functional update directly to get the result for async call easily without refactoring.
+        // So we will calculate it first.
+
+        let newCartItems = [];
+        setCartItems((prevItems) => {
+          const existingItem = prevItems.find(
+            (item) =>
+              item.nome === product.nome &&
+              item.categoria === product.categoria,
+          );
+
+          if (existingItem) {
+            newCartItems = prevItems.map((item) =>
+              item.nome === product.nome && item.categoria === product.categoria
+                ? { ...item, quantity: item.quantity + quantity }
+                : item,
+            );
+          } else {
+            newCartItems = [
+              ...prevItems,
+              {
+                ...product,
+                id: `${product.categoria}-${product.nome}`,
+                quantity,
+              },
+            ];
+          }
+          return newCartItems;
+        });
+
+        // Update Server
+        // We use the calculated newCartItems.
+        // Note: set state is async, but the calculation inside the callback is synchronous for the return,
+        // but we can't extract it easily unless we construct it outside.
+        // Let's construct it from 'cartItems' (dependency) but `addToCart` might change it.
+        // Better to calculate it based on current `cartItems` state since `addToCart` is in `useCallback` with `[cartItems]` dependency?
+        // Actually original code had `[user?.uid]` dependency, not `cartItems`.
+        // This implies it used the functional update to get latest state.
+        // And then mistakenly used the result of that logic?
+        // Original code:
+        /*
+          setCartItems((prevItems) => {
+             // ... calc updatedItems
+             updateUserCart(user.uid, updatedItems).catch(() => {});
+             return updatedItems;
+          });
+        */
+        // That works because `updateUserCart` is called INSIDE the setState callback!
+        // That is a bit of a pattern anti-pattern (side effect in render/state reducer) but effective here.
+        // I will replicate it.
+
+        // However, I need to allow `user` to be null in dependency, but we checked it above.
+
         setCartItems((prevItems) => {
           const existingItem = prevItems.find(
             (item) =>
@@ -108,16 +185,13 @@ export const CartProvider = ({ children }) => {
           );
 
           let updatedItems;
-
           if (existingItem) {
-            // Update quantity if product exists
             updatedItems = prevItems.map((item) =>
               item.nome === product.nome && item.categoria === product.categoria
                 ? { ...item, quantity: item.quantity + quantity }
                 : item,
             );
           } else {
-            // Add new product
             updatedItems = [
               ...prevItems,
               {
@@ -128,37 +202,39 @@ export const CartProvider = ({ children }) => {
             ];
           }
 
-          // ✅ Update Firestore (non-blocking)
-          updateUserCart(user.uid, updatedItems).catch(() => {});
+          // Side effect: update server
+          dataService.updateUserCart(userId, updatedItems).catch(console.error);
 
           return updatedItems;
         });
       } catch (error) {}
     },
-    [user?.uid],
+    [user],
   );
 
   // =========================================================================
-  // REMOVE FROM CART (Update Firestore + Local)
+  // REMOVE FROM CART (Update Appwrite + Local)
   // =========================================================================
   const removeFromCart = useCallback(
     async (productId) => {
+      const userId = user?.$id || user?.uid;
+
       setCartItems((prevItems) => {
         const updatedItems = prevItems.filter((item) => item.id !== productId);
 
-        // ✅ Update Firestore if user is logged in
-        if (user?.uid) {
-          updateUserCart(user.uid, updatedItems).catch(() => {});
+        // ✅ Update Appwrite if user is logged in
+        if (userId) {
+          dataService.updateUserCart(userId, updatedItems).catch(console.error);
         }
 
         return updatedItems;
       });
     },
-    [user?.uid],
+    [user],
   );
 
   // =========================================================================
-  // UPDATE QUANTITY (Update Firestore + Local)
+  // UPDATE QUANTITY (Update Appwrite + Local)
   // =========================================================================
   const updateQuantity = useCallback(
     async (productId, quantity) => {
@@ -167,46 +243,73 @@ export const CartProvider = ({ children }) => {
         return;
       }
 
+      const userId = user?.$id || user?.uid;
+
       setCartItems((prevItems) => {
         const updatedItems = prevItems.map((item) =>
           item.id === productId ? { ...item, quantity } : item,
         );
 
-        // ✅ Update Firestore if user is logged in
-        if (user?.uid) {
-          updateUserCart(user.uid, updatedItems).catch(() => {});
+        // ✅ Update Appwrite if user is logged in
+        if (userId) {
+          dataService.updateUserCart(userId, updatedItems).catch(console.error);
         }
 
         return updatedItems;
       });
     },
-    [user?.uid, removeFromCart],
+    [user, removeFromCart],
   );
 
   // =========================================================================
-  // CLEAR CART (Update Firestore + Local)
+  // CLEAR CART (Update Appwrite + Local)
   // =========================================================================
   const clearCart = useCallback(async () => {
     setCartItems([]);
+    const userId = user?.$id || user?.uid;
 
-    // ✅ Clear Firestore if user is logged in
-    if (user?.uid) {
-      updateUserCart(user.uid, []).catch(() => {});
+    // ✅ Clear Appwrite if user is logged in
+    if (userId) {
+      dataService.updateUserCart(userId, []).catch(console.error);
     }
-  }, [user?.uid]);
+  }, [user]);
 
   // =========================================================================
   // CALCULATE TOTALS
   // =========================================================================
   const getTotalPrice = useCallback(() => {
     return cartItems.reduce((total, item) => {
-      const price = parseFloat(item.preco.replace(/[^\d]/g, ""));
-      return total + price * item.quantity;
+      // Clean price string if needed (e.g. "1.000 kz")
+      // Assuming item.price is string or number.
+      // Existing code: parseFloat(item.preco.replace(/[^\d]/g, ""));
+      // Appwrite products might have separate price field or we map it.
+      // We should check what `product` object looks like.
+      // If we use `useFirebase` (Appwrite), `fetchAllProducts` calls `dataService.getProducts()`.
+      // `dataService.createProduct` saves `price` as number (from form).
+      // So `item.price` (or `item.preco` if we kept property names) should be number.
+      // But `AdminPanel` passes `price` (number).
+      // `BestSellersSection` used `preco` (string).
+      // We need to standardize.
+      // If `cartItems` come from `addToCart`, it depends on what is passed to `addToCart`.
+      // `BestSellersSection` calls `addToCart` with `product`.
+      // I need to ensure `product` object passed to `addToCart` has standard fields.
+
+      // Let's keep the existing logic compatible if possible.
+      // If `item.price` is number, replace will fail.
+      const val = item.price || item.preco || 0;
+      let numericPrice = 0;
+      if (typeof val === "number") {
+        numericPrice = val;
+      } else if (typeof val === "string") {
+        numericPrice = parseFloat(val.replace(/[^\d]/g, "") || 0);
+      }
+
+      return total + numericPrice * (item.quantity || 1);
     }, 0);
   }, [cartItems]);
 
   const getTotalItems = useCallback(() => {
-    return cartItems.reduce((total, item) => total + item.quantity, 0);
+    return cartItems.reduce((total, item) => total + (item.quantity || 1), 0);
   }, [cartItems]);
 
   // =========================================================================

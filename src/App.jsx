@@ -6,7 +6,7 @@ import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
 import CartDrawer from "./components/CartDrawer";
 import PrivateRoute from "./routes/PrivateRoute";
-import AdminPanel from "./components/AdminPanel";
+import AdminPanel from "./Components/AdminPanel";
 
 function App() {
   return (

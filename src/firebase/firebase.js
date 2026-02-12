@@ -21,8 +21,7 @@ const firebaseConfig = {
     import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "backend-djay.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "backend-djay",
   storageBucket:
-    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ||
-    "backend-djay.firebasestorage.app",
+    import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "backend-djay.appspot.com",
   messagingSenderId:
     import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "1020937753704",
   appId:
@@ -46,8 +45,9 @@ const db = initializeFirestore(app, {
   }),
 });
 
-// Initialize Firebase Storage
-const storage = getStorage(app);
+// Initialize Firebase Storage (Explicit Bucket)
+// ⚠️ FIX: Forcing bucket to avoid auto-detect issues or wrong region
+const storage = getStorage(app, "gs://backend-djay.appspot.com");
 
 // Export Firebase instances
 export { app, auth, db, storage };

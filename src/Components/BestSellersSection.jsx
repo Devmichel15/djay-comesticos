@@ -1,10 +1,10 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, ShoppingBag } from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCart } from "../context/CartContext";
-import produtosData from "../produtos.json";
+import { useAppwrite } from "../hooks/useAppwrite";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -27,7 +27,7 @@ const ProductCard = ({
 
       {/* Favorito */}
       <button
-        onClick={() => onToggleWishlist(product.productId)}
+        onClick={() => onToggleWishlist(product.id)}
         className="absolute top-4 right-4 z-10 p-2 text-white/40 hover:text-red-400 transition-colors"
       >
         <Heart
@@ -39,12 +39,12 @@ const ProductCard = ({
 
       {/* Imagem */}
       <div
-        onClick={() => onNavigate(`/produto/${product.productId}`)}
+        onClick={() => onNavigate(`/produto/${product.id}`)}
         className="relative h-56 flex items-center justify-center cursor-pointer overflow-hidden bg-neutral-800/50"
       >
         <img
-          src={product.img}
-          alt={product.nome}
+          src={product.imageUrl || product.img} // Fallback for legacy naming
+          alt={product.name}
           className="h-44 w-auto object-contain transition-transform duration-700 group-hover:scale-105"
         />
       </div>
@@ -53,15 +53,15 @@ const ProductCard = ({
       <div className="p-5">
         {/* Categoria */}
         <p className="text-[10px] uppercase text-gold/70 tracking-[0.2em] mb-2">
-          {product.categoria}
+          {product.category}
         </p>
 
         {/* Nome */}
         <h3
-          onClick={() => onNavigate(`/produto/${product.productId}`)}
+          onClick={() => onNavigate(`/produto/${product.id}`)}
           className="text-sm font-medium text-white mb-4 line-clamp-2 hover:text-gold transition-colors cursor-pointer leading-relaxed"
         >
-          {product.nome}
+          {product.name}
         </h3>
 
         {/* Preço */}
@@ -72,7 +72,9 @@ const ProductCard = ({
             </span>
           )}
           <span className="text-lg font-semibold text-white">
-            {product.preco}
+            {typeof product.price === "number"
+              ? `${product.price.toLocaleString()} kz`
+              : product.price}
           </span>
         </div>
 
@@ -92,106 +94,93 @@ const ProductCard = ({
 const BestSellersSection = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [wishlist, setWishlist] = React.useState([]);
+  const { fetchAllProducts, loading } = useAppwrite();
+  const [products, setProducts] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const gridRef = useRef(null);
 
-  // Animações simples e elegantes
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Título
-      gsap.fromTo(
-        ".bestseller-title",
-        { y: 40, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: titleRef.current,
-            start: "top 85%",
-          },
-        },
-      );
-
-      // Subtítulo
-      gsap.fromTo(
-        ".bestseller-subtitle",
-        { y: 20, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          delay: 0.2,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: titleRef.current,
-            start: "top 85%",
-          },
-        },
-      );
-
-      // Cards com stagger simples
-      gsap.fromTo(
-        ".product-card",
-        { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: gridRef.current,
-            start: "top 85%",
-          },
-        },
-      );
-    }, sectionRef);
-
-    return () => ctx.revert();
+    const loadProducts = async () => {
+      try {
+        const allProducts = await fetchAllProducts();
+        // Simulate "Best Sellers" by taking first 5 or random 5
+        // For now, just take first 5
+        if (allProducts && allProducts.length > 0) {
+          setProducts(allProducts.slice(0, 5));
+        }
+      } catch (e) {
+        console.error("Failed to load best sellers", e);
+      }
+    };
+    loadProducts();
   }, []);
 
-  // Produtos mais vendidos
-  const bestSellers = [
-    { categoryIndex: 1, productIndex: 0, discount: 15, oldPrice: "28.000kz" },
-    { categoryIndex: 0, productIndex: 0, discount: 10, oldPrice: "30.000kz" },
-    { categoryIndex: 2, productIndex: 1, discount: 20, oldPrice: "35.000kz" },
-    { categoryIndex: 1, productIndex: 2, discount: 12, oldPrice: "26.000kz" },
-    { categoryIndex: 3, productIndex: 0, discount: 18, oldPrice: "32.000kz" },
-  ];
+  // Animações simples e elegantes (run when products change)
+  useEffect(() => {
+    if (products.length === 0) return;
 
-  const getProduct = (categoryIndex, productIndex) => {
-    if (
-      categoryIndex < 0 ||
-      categoryIndex >= produtosData.length ||
-      productIndex < 0 ||
-      productIndex >= produtosData[categoryIndex].produtos.length
-    ) {
-      return null;
-    }
-    return {
-      ...produtosData[categoryIndex].produtos[productIndex],
-      categoria: produtosData[categoryIndex].categoria,
-      categoryIndex,
-      productIndex,
-    };
-  };
+    // Small delay to ensure DOM is ready
+    const timer = setTimeout(() => {
+      const ctx = gsap.context(() => {
+        // Título
+        gsap.fromTo(
+          ".bestseller-title",
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: titleRef.current,
+              start: "top 85%",
+            },
+          },
+        );
 
-  const products = bestSellers
-    .map((seller) => {
-      const product = getProduct(seller.categoryIndex, seller.productIndex);
-      if (!product) return null;
-      return {
-        ...product,
-        discount: seller.discount,
-        oldPrice: seller.oldPrice,
-        productId: `${seller.categoryIndex}-${seller.productIndex}`,
-      };
-    })
-    .filter(Boolean);
+        // Subtítulo
+        gsap.fromTo(
+          ".bestseller-subtitle",
+          { y: 20, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            delay: 0.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: titleRef.current,
+              start: "top 85%",
+            },
+          },
+        );
+
+        // Cards com stagger simples
+        gsap.fromTo(
+          ".product-card",
+          { y: 30, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: gridRef.current,
+              start: "top 85%",
+            },
+          },
+        );
+      }, sectionRef);
+
+      return () => ctx.revert();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [products]);
 
   const toggleWishlist = (productId) => {
     setWishlist((prev) =>
@@ -202,13 +191,15 @@ const BestSellersSection = () => {
   };
 
   const handleAddToCart = (product) => {
+    // Adapter for cart structure if needed
     addToCart(
       {
-        nome: product.nome,
-        preco: product.preco,
-        img: product.img,
-        categoria: product.categoria,
-        copy: product.copy,
+        nome: product.name, // Cart expects 'nome' ? fallback to name
+        price: product.price,
+        img: product.imageUrl,
+        categoria: product.category,
+        description: product.description,
+        ...product,
       },
       1,
     );
@@ -235,7 +226,7 @@ const BestSellersSection = () => {
           </div>
 
           <button
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/produtos")} // Assuming /produtos exists or will exist
             className="text-white/50 text-xs uppercase tracking-[0.2em] hover:text-gold transition-colors border-b border-white/20 hover:border-gold pb-1 self-start md:self-auto"
           >
             Ver Todos →
@@ -247,16 +238,26 @@ const BestSellersSection = () => {
           ref={gridRef}
           className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5"
         >
-          {products.map((product) => (
-            <ProductCard
-              key={product.productId}
-              product={product}
-              isWishlisted={wishlist.includes(product.productId)}
-              onToggleWishlist={toggleWishlist}
-              onNavigate={navigate}
-              onAddToCart={handleAddToCart}
-            />
-          ))}
+          {loading && products.length === 0 ? (
+            <div className="col-span-full text-center text-white/50 py-10">
+              Carregando produtos...
+            </div>
+          ) : products.length === 0 ? (
+            <div className="col-span-full text-center text-white/30 py-10">
+              Nenhum produto em destaque no momento.
+            </div>
+          ) : (
+            products.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                isWishlisted={wishlist.includes(product.id)}
+                onToggleWishlist={toggleWishlist}
+                onNavigate={navigate}
+                onAddToCart={handleAddToCart}
+              />
+            ))
+          )}
         </div>
       </div>
     </section>

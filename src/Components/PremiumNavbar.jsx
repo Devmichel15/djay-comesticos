@@ -188,24 +188,19 @@ const PremiumNavbar = () => {
               />
             </button>
 
-            {isAdmin ? (
-              <Link
-                to="/admin"
-                className={`hidden md:flex items-center gap-2 hover:text-gold transition ${isScrolled ? "text-black" : "text-white"}`}
-              >
-                <User className="w-6 h-6" />
-                <span className="text-xs font-mono uppercase tracking-wider">
-                  Admin
-                </span>
-              </Link>
-            ) : (
-              <Link
-                to="/login"
-                className={`hidden md:block hover:text-gold transition ${isScrolled ? "text-black" : "text-white"}`}
-              >
-                <User className="w-6 h-6" />
-              </Link>
-            )}
+            {/* User Profile - Standardized between Mobile & Desktop */}
+            <button
+              onClick={() =>
+                navigate(isAdmin ? "/admin" : user ? "/profile" : "/login")
+              }
+              className={`p-2 transition-colors relative group ${isScrolled ? "text-black hover:text-gold" : "text-white/70 hover:text-gold"}`}
+              aria-label="Minha Conta"
+            >
+              <User className="w-6 h-6" />
+              {user && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-gold rounded-full" />
+              )}
+            </button>
 
             <button
               onClick={() => setIsCartOpen(true)}
