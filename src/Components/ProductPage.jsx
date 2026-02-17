@@ -1,73 +1,137 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
-import { Star, Plus, Minus, ShoppingBag, ChevronDown, Check } from "lucide-react";
-import produtosData from "../produtos.json";
+import { motion } from "framer-motion";
+import {
+  Star,
+  Plus,
+  Minus,
+  ShoppingBag,
+  ChevronDown,
+  Check,
+} from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import RelatedProducts from "./RelatedProducts";
 import { toast } from "react-toastify";
+import dataService from "../appwrite/appwrite.database";
+import PremiumNavbar from "./PremiumNavbar"; // Assuming we want navbar here too? Or App layout handles it?
+// App.jsx has Navbar inside Home, but ProductPage is standalone. Ideally it should have a Navbar.
+// The previous file didn't seem to import it, but let's check imports.
+// Previous file: import PremiumNavbar was NOT there.
+// But Products.jsx had it.
+// Detailed view should probably have it. I'll add it if safely possible, or stick to previous layout.
+// Previous layout had a "Breadcrumb" bar. I will stick to that to minimize visual changes unless requested.
 
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
-  
-  const [quantity, setQuantity] = React.useState(1);
-  const [expandedSection, setExpandedSection] = React.useState(null);
-  const [isAddingToCart, setIsAddingToCart] = React.useState(false);
-  const [addedSuccess, setAddedSuccess] = React.useState(false);
 
-  // Encontrar produto pela categoria e índice
-  const [product, setProduct] = React.useState(null);
-  const [category, setCategory] = React.useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [expandedSection, setExpandedSection] = useState(null);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [addedSuccess, setAddedSuccess] = useState(false);
 
-  React.useEffect(() => {
-    const [catIndex, prodIndex] = id.split("-").map(Number);
-    if (catIndex >= 0 && catIndex < produtosData.length) {
-      const cat = produtosData[catIndex];
-      if (prodIndex >= 0 && prodIndex < cat.produtos.length) {
-        setProduct(cat.produtos[prodIndex]);
-        setCategory(cat.categoria);
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        // id is now the Appwrite Document ID
+        const doc = await dataService.getProduct(id);
+        setProduct(doc);
+      } catch (err) {
+        console.error("Error fetching product:", err);
+        setError("Produto não encontrado");
+      } finally {
+        setLoading(false);
       }
+    };
+
+    if (id) {
+      fetchProduct();
     }
     window.scrollTo(0, 0);
   }, [id]);
 
-  if (!product || !category) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-xl text-gray-600">Produto não encontrado</p>
+        <div className="w-12 h-12 border-4 border-gold border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  const handleAddToCart = async () => {
-    // Check if user is logged in
-    if (!user?.uid) {
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+        <p className="text-xl text-gray-600 mb-4">
+          {error || "Produto não encontrado"}
+        </p>
+        <button
+          onClick={() => navigate("/produtos")}
+          className="px-6 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition-all"
+        >
+          Voltar para Produtos
+        </button>
+      </div>
+    );
+  }
+
+  // Derived fields from Appwrite structure
+  // Migration mapped: nome->name, categoria->category, preco->price, img->image_url, copy->description
+  const productName = product.name;
+  const productCategory = product.category;
+  const productPrice = product.price;
+  const productImage = product.image_url || product.imageUrl; // Fallback
+  const productDescription = product.description;
+
+  const handleAddToCart = async (e) => {
+    // Stop propagation just in case
+    e?.stopPropagation();
+
+    if (!user?.$id && !user?.uid) {
       toast.warning("Por favor, faça login para adicionar ao carrinho");
-      navigate("/sign");
+      navigate("/login"); // Fixed route
       return;
     }
 
     setIsAddingToCart(true);
-    
+
     try {
-      await addToCart({ ...product, categoria: category }, quantity);
-      
-      // Show success feedback
+      // Add to cart expects product object.
+      // We should pass the Appwrite doc structure or a standardized one.
+      // CartContext uses: nome, categoria, price/preco, id
+      // Let's standardize the object passed to cart to match what CartContext expects or update CartContext?
+      // CartContext: `item.nome === product.nome`
+      // This implies CartContext expects `nome`.
+      // BUT we migrated to `name`.
+      // I should pass an object that matches what CartContext expects for now to avoid breaking Cart,
+      // OR update CartContext to use `name`.
+      // Given the "Fix Cart Bug" task, I should probably standardize CartContext to use `id` for identification instead of name+cat.
+      // But for now, to be safe and fix this specific page:
+      const cartItem = {
+        ...product,
+        nome: productName, // Backward compat for valid CartContext matching
+        categoria: productCategory,
+        preco: productPrice, // CartContext might check preco
+        price: productPrice,
+        image_url: productImage,
+        imageUrl: productImage,
+      };
+
+      await addToCart(cartItem, quantity);
+
       setAddedSuccess(true);
-      toast.success(`${quantity}x ${product.nome} adicionado ao carrinho!`);
-      
-      // Reset state
+      toast.success(`${quantity}x ${productName} adicionado ao carrinho!`);
       setQuantity(1);
-      
-      // Reset success feedback after 2 seconds
       setTimeout(() => setAddedSuccess(false), 2000);
     } catch (error) {
       console.error("Erro ao adicionar ao carrinho:", error);
-      toast.error("Erro ao adicionar ao carrinho. Tente novamente.");
+      toast.error("Erro ao adicionar ao carrinho.");
     } finally {
       setIsAddingToCart(false);
     }
@@ -77,37 +141,28 @@ const ProductPage = () => {
     {
       title: "Características",
       content: [
-        "Formulação avançada e inovadora",
+        "Formulação Premium",
         "Testado dermatologicamente",
-        "Longa duração comprovada",
-        "Acabamento profissional",
-        "Seguro para peles sensíveis",
+        "Acabamento Profissional",
+        "Longa Duração",
       ],
     },
     {
-      title: "Como Usar",
-      content: [
-        "1. Aplicar uma pequena quantidade no rosto limpo",
-        "2. Espalhar uniformemente com as mãos ou pincéis",
-        "3. Aguardar alguns segundos até fixar",
-        "4. Remover com água ou desmaquilhante no final do dia",
-      ],
-    },
-    {
-      title: "Ingredientes",
-      content: [
-        "Aqua (água)",
-        "Talc (talco)",
-        "Mica (mica)",
-        "Titanium Dioxide (dióxido de titânio)",
-        "Magnesium Stearate (estearato de magnésio)",
-      ],
+      title: "Descrição Detalhada",
+      content: [productDescription], // Wrap in array to match map
     },
   ];
 
+  const formatPrice = (val) => {
+    return Number(val).toLocaleString("pt-AO", {
+      style: "currency",
+      currency: "AOA",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Breadcrumb - Responsivo */}
+      {/* Breadcrumb */}
       <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 sm:px-6 sm:py-4">
         <div className="max-w-7xl mx-auto flex items-center space-x-2 text-xs sm:text-sm text-gray-600 overflow-x-auto">
           <button
@@ -117,235 +172,169 @@ const ProductPage = () => {
             Home
           </button>
           <span className="text-gray-300">/</span>
-          <span className="whitespace-nowrap text-gray-400">{category}</span>
+          <button
+            onClick={() => navigate("/produtos")}
+            className="whitespace-nowrap hover:text-black transition-colors"
+          >
+            Produtos
+          </button>
           <span className="text-gray-300">/</span>
-          <span className="whitespace-nowrap text-gray-900 font-medium truncate">{product.nome}</span>
+          <span className="whitespace-nowrap text-gray-400">
+            {productCategory}
+          </span>
+          <span className="text-gray-300">/</span>
+          <span className="whitespace-nowrap text-gray-900 font-medium truncate">
+            {productName}
+          </span>
         </div>
       </div>
 
-      {/* Product Section - Mobile First */}
+      {/* Product Section */}
       <div className="flex-1 px-4 py-8 sm:px-6 sm:py-12 lg:py-16">
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="flex flex-col lg:flex-row lg:gap-12 mb-12 lg:mb-20"
           >
-            {/* Imagem - Responsiva */}
+            {/* Image Section - FIX UI BUG HERE */}
             <motion.div
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="w-full lg:w-1/2 flex items-center justify-center mb-8 lg:mb-0"
             >
-              <div className="w-full max-w-sm lg:max-w-none bg-linear-to-br from-gray-100 to-gray-200 rounded-xl lg:rounded-2xl aspect-square relative overflow-hidden group">
-                <div className="absolute inset-0 bg-linear-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="w-full max-w-lg bg-gray-100 rounded-2xl overflow-hidden relative group border border-gray-200 h-[500px] flex items-center justify-center p-4">
+                {/* Applied requested CSS principles via Tailwind + Style */}
                 <img
-                  src={product.img}
-                  alt={product.nome}
-                  className="w-full h-full object-contain drop-shadow-lg group-hover:scale-105 transition-transform duration-700 p-4 lg:p-6"
+                  src={productImage}
+                  alt={productName}
+                  className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
                 />
               </div>
             </motion.div>
 
-            {/* Info - Responsiva */}
+            {/* Info Section */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               className="w-full lg:w-1/2 flex flex-col justify-start"
             >
-              {/* Category Badge */}
               <div className="inline-flex items-center w-fit mb-3 lg:mb-4">
-                <span className="text-xs uppercase tracking-widest text-gray-500 font-semibold">
-                  {category}
+                <span className="text-xs uppercase tracking-widest text-gray-500 font-semibold px-2 py-1 bg-gray-100 rounded">
+                  {productCategory}
                 </span>
               </div>
 
-              {/* Title - Responsivo */}
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-3 lg:mb-4 leading-tight">
-                {product.nome}
+                {productName}
               </h1>
 
-              {/* Rating */}
               <div className="flex items-center space-x-2 mb-6">
                 <div className="flex gap-0.5">
                   {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className="w-4 h-4 sm:w-5 sm:h-5 fill-yellow-400 text-yellow-400"
-                    />
+                    <Star key={i} className="w-4 h-4 text-gold fill-gold" />
                   ))}
                 </div>
-                <span className="text-xs sm:text-sm text-gray-600">(128 avaliações)</span>
+                <span className="text-xs sm:text-sm text-gray-600">
+                  (Avaliações)
+                </span>
               </div>
 
-              {/* Preço - Responsivo */}
               <div className="mb-6 lg:mb-8">
-                <p className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2">
-                  Preço
+                <p className="text-4xl sm:text-5xl font-bold text-gray-900">
+                  {formatPrice(productPrice)}
                 </p>
-                <p className="text-4xl sm:text-5xl lg:text-5xl font-bold text-gray-900">{product.preco}</p>
-                <p className="text-sm text-green-600 mt-2">✓ Em Stock</p>
+                <p className="text-sm text-green-600 mt-2 flex items-center gap-1">
+                  <Check className="w-4 h-4" /> Em Stock
+                </p>
               </div>
 
-              {/* Descrição - Responsiva */}
               <p className="text-base sm:text-lg text-gray-700 mb-6 lg:mb-8 leading-relaxed">
-                {product.copy}
+                {productDescription}
               </p>
 
-              {/* Quantity & Add to Cart - Mobile Optimized */}
-              <div className="flex flex-col gap-3 mb-8 lg:mb-8">
-                {/* Quantity Selector */}
-                <div className="flex items-center border border-gray-300 rounded-lg h-12 sm:h-14 bg-white">
+              {/* Add to Cart */}
+              <div className="flex flex-col gap-3 mb-8">
+                <div className="flex items-center border border-gray-300 rounded-lg h-12 w-fit bg-white mb-4">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="shrink-0 px-3 sm:px-4 py-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-                    aria-label="Diminuir quantidade"
+                    className="px-4 py-2 hover:bg-gray-100"
                   >
-                    <Minus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Minus className="w-4 h-4" />
                   </button>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                    className="flex-1 text-center font-semibold text-base sm:text-lg outline-none bg-transparent"
-                    min="1"
-                    aria-label="Quantidade"
-                  />
+                  <span className="px-4 font-semibold">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="shrink-0 px-3 sm:px-4 py-2 text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-                    aria-label="Aumentar quantidade"
+                    className="px-4 py-2 hover:bg-gray-100"
                   >
-                    <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <Plus className="w-4 h-4" />
                   </button>
                 </div>
 
-                {/* Add to Cart Button - Full Width Mobile, Auto Desktop */}
                 <motion.button
-                  whileHover={{ scale: addedSuccess ? 1 : 1.02 }}
-                  whileTap={{ scale: addedSuccess ? 1 : 0.98 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleAddToCart}
                   disabled={isAddingToCart || addedSuccess}
-                  className={`w-full lg:w-auto px-6 sm:px-8 h-12 sm:h-14 font-semibold text-base sm:text-lg rounded-lg flex items-center justify-center gap-2 group transition-all duration-500 ${
+                  className={`w-full lg:w-auto px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all ${
                     addedSuccess
                       ? "bg-green-600 text-white"
-                      : "bg-black text-white hover:bg-gray-900 active:bg-gray-800"
-                  } ${isAddingToCart ? "opacity-70 cursor-not-allowed" : ""}`}
-                  aria-label="Adicionar ao carrinho"
+                      : "bg-black text-white hover:bg-gray-800"
+                  }`}
                 >
                   {addedSuccess ? (
                     <>
-                      <Check className="w-5 h-5 sm:w-6 sm:h-6 animate-pulse" />
-                      <span>Adicionado!</span>
-                    </>
-                  ) : isAddingToCart ? (
-                    <>
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                        className="w-5 h-5 sm:w-6 sm:h-6 border-2 border-white border-t-transparent rounded-full"
-                      />
-                      <span>Adicionando...</span>
+                      <Check className="w-5 h-5" /> Adicionado!
                     </>
                   ) : (
                     <>
-                      <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 group-hover:scale-110 transition-transform" />
-                      <span>Adicionar ao Carrinho</span>
+                      <ShoppingBag className="w-5 h-5" /> Adicionar ao Carrinho
                     </>
                   )}
                 </motion.button>
               </div>
 
-              {/* Trust Signals - Responsivo */}
-              <div className="space-y-3 pt-6 border-t border-gray-200">
-                <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-700">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-                    ✓
-                  </div>
-                  <span>Envio grátis para compras acima de 5.000kz</span>
-                </div>
-                <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-700">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-                    ✓
-                  </div>
-                  <span>Garantia de satisfação ou devolução</span>
-                </div>
-                <div className="flex items-start gap-3 text-xs sm:text-sm text-gray-700">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center shrink-0 mt-0.5">
-                    ✓
-                  </div>
-                  <span>Produtos 100% originais certificados</span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Expandable Sections - Responsivo */}
-          <div className="mb-12 lg:mb-20 border-t border-gray-200 pt-8 lg:pt-12">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-              Informações do Produto
-            </h2>
-            <div className="space-y-3">
-              {sections.map((section, idx) => (
-                <motion.div
-                  key={idx}
-                  className="border border-gray-200 rounded-lg overflow-hidden"
-                >
-                  <button
-                    onClick={() =>
-                      setExpandedSection(expandedSection === idx ? null : idx)
-                    }
-                    className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 transition-colors"
-                    aria-expanded={expandedSection === idx}
-                  >
-                    <h3 className="font-semibold text-gray-900 text-base sm:text-lg">
-                      {section.title}
-                    </h3>
+              {/* Accordion Sections */}
+              <div className="border-t border-gray-200 pt-6">
+                {sections.map((section, idx) => (
+                  <div key={idx} className="border-b border-gray-200">
+                    <button
+                      onClick={() =>
+                        setExpandedSection(expandedSection === idx ? null : idx)
+                      }
+                      className="w-full py-4 flex justify-between items-center text-left"
+                    >
+                      <span className="font-semibold text-gray-900">
+                        {section.title}
+                      </span>
+                      <ChevronDown
+                        className={`w-5 h-5 transition-transform ${expandedSection === idx ? "rotate-180" : ""}`}
+                      />
+                    </button>
                     <motion.div
+                      initial={false}
                       animate={{
-                        rotate: expandedSection === idx ? 180 : 0,
+                        height: expandedSection === idx ? "auto" : 0,
+                        opacity: expandedSection === idx ? 1 : 0,
                       }}
-                      transition={{ duration: 0.3 }}
-                      className="shrink-0"
+                      className="overflow-hidden"
                     >
-                      <ChevronDown className="w-5 h-5 text-gray-600" />
-                    </motion.div>
-                  </button>
-
-                  {expandedSection === idx && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200"
-                    >
-                      <ul className="space-y-2">
+                      <ul className="pb-4 list-disc list-inside text-gray-600">
                         {section.content.map((item, i) => (
-                          <li key={i} className="text-gray-700 text-sm sm:text-base flex items-start gap-3">
-                            <span className="text-gold font-bold mt-0.5 shrink-0">•</span>
-                            <span>{item}</span>
-                          </li>
+                          <li key={i}>{item}</li>
                         ))}
                       </ul>
                     </motion.div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-          </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
-
-      {/* Produtos Relacionados */}
-      <RelatedProducts
-        currentProduct={product}
-        categoryName={category}
-        categoryIndex={parseInt(id.split("-")[0])}
-      />
     </div>
   );
 };

@@ -190,9 +190,17 @@ const PremiumNavbar = () => {
 
             {/* User Profile - Standardized between Mobile & Desktop */}
             <button
-              onClick={() =>
-                navigate(isAdmin ? "/admin" : user ? "/profile" : "/login")
-              }
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!user) {
+                  navigate("/login");
+                } else if (isAdmin) {
+                  navigate("/admin");
+                } else {
+                  navigate("/"); // Or profile if it existed
+                }
+              }}
               className={`p-2 transition-colors relative group ${isScrolled ? "text-black hover:text-gold" : "text-white/70 hover:text-gold"}`}
               aria-label="Minha Conta"
             >

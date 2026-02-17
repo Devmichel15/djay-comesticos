@@ -1,5 +1,5 @@
 // ============================================================================
-// useAppwrite (Formerly useFirebase)
+// useAppwrite - Custom hook for Appwrite operations
 // ============================================================================
 
 import { useState } from "react";
@@ -7,8 +7,8 @@ import {
   uploadProductImage,
   deleteProductImage,
   getProductImageUrl,
-} from "../appwrite/storage";
-import dataService from "../appwrite/databases";
+} from "../appwrite/appwrite.storage";
+import dataService from "../appwrite/appwrite.database";
 import { useAuth } from "../context/AuthContext";
 
 export const useAppwrite = () => {
@@ -84,7 +84,8 @@ export const useAppwrite = () => {
       const mapped = response.documents.map((doc) => ({
         ...doc,
         id: doc.$id,
-        imageUrl: getProductImageUrl(doc.imageId), // Use the helper for absolute URL
+        // Prefer saved imageUrl, fallback to generating from ID if missing
+        imageUrl: doc.imageUrl || getProductImageUrl(doc.imageId),
       }));
       setProducts(mapped);
       return mapped;
@@ -155,7 +156,7 @@ export const useAppwrite = () => {
     removeImage,
     createProduct,
     fetchAllProducts,
-    updateProductData,
+    updateProduct: updateProductData,
     removeProduct,
     clearError,
   };

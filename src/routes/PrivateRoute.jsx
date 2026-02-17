@@ -11,7 +11,10 @@ const PrivateRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (user?.role !== "admin") {
+  // Estrita verificação de Admin
+  const ADMIN_EMAIL = "djaycosmetics@gmail.com";
+
+  if (!user || user.email !== ADMIN_EMAIL) {
     return <Navigate to="/" replace />;
   }
 

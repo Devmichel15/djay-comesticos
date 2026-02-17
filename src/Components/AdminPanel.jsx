@@ -24,6 +24,7 @@ export default function AdminPanel() {
     loading,
     error,
     createProduct,
+    updateProduct,
     uploadImage,
     removeProduct,
   } = useAppwrite();
@@ -41,6 +42,9 @@ export default function AdminPanel() {
   const [preview, setPreview] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
+  const [currentImageId, setCurrentImageId] = useState(null);
 
   useEffect(() => {
     fetchAllProducts();
@@ -56,28 +60,70 @@ export default function AdminPanel() {
     }
   }, [file]);
 
-  const handleCreate = async (e) => {
+  const openCreateModal = () => {
+    setForm({
+      name: "",
+      price: 0,
+      category: "Todos",
+      description: "",
+      stock: 0,
+    });
+    setFile(null);
+    setPreview(null);
+    setEditId(null);
+    setCurrentImageId(null);
+    setIsEditing(false);
+    setShowModal(true);
+  };
+
+  const openEditModal = (product) => {
+    setForm({
+      name: product.name,
+      price: product.price,
+      category: product.category,
+      description: product.description || "",
+      stock: product.stock || 0,
+    });
+    setPreview(product.image_url || product.imageUrl);
+    setEditId(product.id);
+    setCurrentImageId(product.imageId);
+    setIsEditing(true);
+    setShowModal(true);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      let imageId = "";
+      let imageId = currentImageId;
+      let imageUrl = preview;
+
       if (file) {
         const uploadResult = await uploadImage(file);
         imageId = uploadResult.fileId;
+        imageUrl = uploadResult.url;
       }
-      await createProduct({ ...form, imageId });
-      setForm({
-        name: "",
-        price: 0,
-        category: "Todos",
-        description: "",
-        stock: 0,
-      });
-      setFile(null);
-      setPreview(null);
+
+      const productData = {
+        name: form.name,
+        price: form.price,
+        category: form.category,
+        stock: form.stock,
+        description: form.description,
+        imageId,
+        imageUrl,
+      };
+
+      if (isEditing) {
+        await updateProduct(editId, productData);
+      } else {
+        await createProduct(productData);
+      }
+
+      openCreateModal();
       setShowModal(false);
       await fetchAllProducts();
     } catch (err) {
-      alert(err.message || "Erro ao criar produto");
+      alert(err.message || "Erro ao salvar produto");
     }
   };
 
@@ -263,9 +309,9 @@ export default function AdminPanel() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-white/5 rounded-lg overflow-hidden">
-                          {product.imageUrl && (
+                          {(product.image_url || product.imageUrl) && (
                             <img
-                              src={product.imageUrl}
+                              src={product.image_url || product.imageUrl}
                               alt={product.name}
                               className="w-full h-full object-cover"
                             />
@@ -300,7 +346,7 @@ export default function AdminPanel() {
                 Gestão de Produtos
               </h2>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={openCreateModal}
                 className="bg-gold text-black px-4 py-2 rounded-xl font-bold text-sm hover:bg-yellow-600 transition-all flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -322,17 +368,24 @@ export default function AdminPanel() {
                   className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-gold/50 transition-all group"
                 >
                   <div className="relative h-48 bg-white/5">
-                    {p.imageUrl && (
+                    {(p.image_url || p.imageUrl) && (
                       <img
-                        src={p.imageUrl}
+                        src={p.image_url || p.imageUrl}
                         alt={p.name}
                         className="w-full h-full object-contain p-4"
                       />
                     )}
-                    <div className="absolute top-2 right-2">
+                    {/* Actions: Always visible on mobile/tablet, hover on desktop */}
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => openEditModal(p)}
+                        className="bg-blue-500/80 p-2 rounded-lg hover:bg-blue-600 transition-all backdrop-blur-sm"
+                      >
+                        <Edit className="w-4 h-4 text-white" />
+                      </button>
                       <button
                         onClick={() => handleDelete(p.id, p.imageId)}
-                        className="bg-red-500/80 p-2 rounded-lg hover:bg-red-600 transition-all"
+                        className="bg-red-500/80 p-2 rounded-lg hover:bg-red-600 transition-all backdrop-blur-sm"
                       >
                         <Trash2 className="w-4 h-4 text-white" />
                       </button>
@@ -393,7 +446,7 @@ export default function AdminPanel() {
                 </button>
               </div>
 
-              <form onSubmit={handleCreate} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="text-white/70 text-sm mb-2 block">
                     Nome do Produto
@@ -525,7 +578,7 @@ export default function AdminPanel() {
                   type="submit"
                   className="w-full bg-gold text-black font-bold py-3 rounded-xl hover:bg-yellow-600 transition-all"
                 >
-                  Criar Produto
+                  {isEditing ? "Salvar Alterações" : "Criar Produto"}
                 </button>
               </form>
             </motion.div>

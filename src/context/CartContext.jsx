@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { useAuth } from "./AuthContext";
-import dataService from "../appwrite/databases";
+import dataService from "../appwrite/appwrite.database";
 
 const CartContext = createContext();
 
@@ -146,7 +146,7 @@ export const CartProvider = ({ children }) => {
               ...prevItems,
               {
                 ...product,
-                id: `${product.categoria}-${product.nome}`,
+                id: product.id || `${product.categoria}-${product.nome}`,
                 quantity,
               },
             ];
@@ -284,7 +284,7 @@ export const CartProvider = ({ children }) => {
       // Existing code: parseFloat(item.preco.replace(/[^\d]/g, ""));
       // Appwrite products might have separate price field or we map it.
       // We should check what `product` object looks like.
-      // If we use `useFirebase` (Appwrite), `fetchAllProducts` calls `dataService.getProducts()`.
+      // If we use `useAppwrite`, `fetchAllProducts` calls `dataService.getProducts()`.
       // `dataService.createProduct` saves `price` as number (from form).
       // So `item.price` (or `item.preco` if we kept property names) should be number.
       // But `AdminPanel` passes `price` (number).

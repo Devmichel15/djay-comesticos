@@ -40,12 +40,12 @@ const ProductCard = ({
       {/* Imagem */}
       <div
         onClick={() => onNavigate(`/produto/${product.id}`)}
-        className="relative h-56 flex items-center justify-center cursor-pointer overflow-hidden bg-neutral-800/50"
+        className="relative h-[250px] flex items-center justify-center cursor-pointer overflow-hidden bg-neutral-800/50 p-[10px]"
       >
         <img
           src={product.imageUrl || product.img} // Fallback for legacy naming
           alt={product.name}
-          className="h-44 w-auto object-contain transition-transform duration-700 group-hover:scale-105"
+          className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
         />
       </div>
 

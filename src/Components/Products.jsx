@@ -1,7 +1,7 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router-dom";
-import produtosData from "../produtos.json";
+import { useAppwrite } from "../hooks/useAppwrite";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -28,6 +28,27 @@ const cardVariants = {
 
 function Products() {
   const navigate = useNavigate();
+  const { fetchAllProducts } = useAppwrite();
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+
+  useEffect(() => {
+    const loadFeatured = async () => {
+      const all = await fetchAllProducts();
+      if (all && all.length > 0) {
+        // Pick one product per category for highlight
+        const categories = [...new Set(all.map((p) => p.category))];
+        const selected = [];
+        categories.slice(0, 4).forEach((cat) => {
+          const prod = all.find((p) => p.category === cat);
+          if (prod) selected.push(prod);
+        });
+        setFeaturedProducts(selected);
+      }
+    };
+    loadFeatured();
+  }, []);
+
+  if (!featuredProducts.length) return null;
 
   return (
     <section className="px-8 py-20 bg-linear-to-b from-white via-gray-50 to-gray-100 min-h-screen">
@@ -41,25 +62,23 @@ function Products() {
         initial="hidden"
         animate="visible"
       >
-        {produtosData.map((categoria, catIdx) => {
-          const produto = categoria.produtos?.[0];
-          if (!produto) return null;
-
-          const productId = `${catIdx}-0`;
-
+        {featuredProducts.map((produto, index) => {
           return (
             <motion.div
-              key={catIdx}
+              key={produto.id || index}
               className="bg-white rounded-3xl shadow-xl overflow-hidden cursor-pointer flex flex-col"
               variants={cardVariants}
               whileHover="hover"
             >
               {/* Imagem */}
-              <div className="relative h-60 bg-linear-to-tr from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center overflow-hidden">
-                {produto.img ? (
+              <div
+                className="relative h-60 bg-linear-to-tr from-gray-300 via-gray-400 to-gray-500 flex items-center justify-center overflow-hidden"
+                onClick={() => navigate(`/produto/${produto.id}`)}
+              >
+                {produto.image_url || produto.imageUrl ? (
                   <img
-                    src={produto.img}
-                    alt={produto.nome}
+                    src={produto.image_url || produto.imageUrl}
+                    alt={produto.name}
                     className="object-contain h-full transition-transform duration-300 hover:scale-105"
                   />
                 ) : (
@@ -76,24 +95,30 @@ function Products() {
               {/* Conteúdo */}
               <div className="p-6 flex flex-col flex-1">
                 <span className="text-xs uppercase tracking-widest text-gray-500 mb-2">
-                  {categoria.categoria}
+                  {produto.category}
                 </span>
 
-                <h3 className="text-lg font-mono font-semibold text-black mb-3">
-                  {produto.nome}
+                <h3
+                  className="text-lg font-mono font-semibold text-black mb-3 hover:text-yellow-600 transition-colors"
+                  onClick={() => navigate(`/produto/${produto.id}`)}
+                >
+                  {produto.name}
                 </h3>
 
                 <p className="text-sm text-gray-700 mb-6 leading-relaxed line-clamp-3">
-                  {produto.copy}
+                  {produto.description}
                 </p>
 
                 <div className="mt-auto flex items-center justify-between">
                   <span className="font-mono text-lg font-semibold text-black">
-                    {produto.preco}
+                    {Number(produto.price).toLocaleString("pt-AO", {
+                      style: "currency",
+                      currency: "AOA",
+                    })}
                   </span>
 
-                  <button 
-                    onClick={() => navigate(`/produto/${productId}`)}
+                  <button
+                    onClick={() => navigate(`/produto/${produto.id}`)}
                     className="bg-linear-to-r from-yellow-500 to-yellow-600 text-black px-6 py-2 rounded-full font-mono font-semibold shadow-md hover:from-yellow-600 hover:to-yellow-700 transition-all"
                   >
                     Comprar

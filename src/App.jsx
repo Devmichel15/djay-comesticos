@@ -1,4 +1,5 @@
 import Home from "./Pages/Home";
+import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Sign from "./Pages/Sign";
 import ProductPage from "./components/ProductPage";
@@ -7,6 +8,7 @@ import { AuthProvider } from "./context/AuthContext";
 import CartDrawer from "./components/CartDrawer";
 import PrivateRoute from "./routes/PrivateRoute";
 import AdminPanel from "./Components/AdminPanel";
+import Products from "./Pages/Products";
 
 function App() {
   return (
@@ -24,6 +26,7 @@ function App() {
               </PrivateRoute>
             }
           />
+          <Route path="/produtos" element={<Products />} />
           <Route path="/produto/:id" element={<ProductPage />} />
         </Routes>
       </CartProvider>

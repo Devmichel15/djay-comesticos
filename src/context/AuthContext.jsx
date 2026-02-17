@@ -6,8 +6,8 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import authService from "../appwrite/auth";
-import dataService from "../appwrite/databases";
+import authService from "../appwrite/appwrite.auth";
+import dataService from "../appwrite/appwrite.database";
 
 // WhatsApp number
 const WHATSAPP = import.meta.env.VITE_WHATSAPP_NUMBER || "5511999999999";
