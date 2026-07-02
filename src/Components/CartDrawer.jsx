@@ -40,7 +40,11 @@ const CartDrawer = () => {
     }
 
     // Format WhatsApp Message
-    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "244935354826";
+    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
+    if (!whatsappNumber) {
+      toast.error("WhatsApp number not configured");
+      return;
+    }
     const userName = user.displayName || user.name || "Cliente";
     const userEmail = user.email || "Sem email";
 

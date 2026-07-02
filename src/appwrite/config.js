@@ -1,15 +1,33 @@
 import { Client, Account, Databases, Storage } from "appwrite";
 
-export const APPWRITE_ENDPOINT =
-  import.meta.env.VITE_APPWRITE_ENDPOINT || "https://fra.cloud.appwrite.io/v1";
-export const APPWRITE_PROJECT_ID =
-  import.meta.env.VITE_APPWRITE_PROJECT_ID || "698b69a10008468221b4";
-export const APPWRITE_DATABASE_ID =
-  import.meta.env.VITE_APPWRITE_ID_DATABASE || "698e0c0400114d2f5bbe";
-export const APPWRITE_BUCKET_ID =
-  import.meta.env.VITE_APPWRITE_ID_BUCKET || "698e0c34002249a22585";
+const required = (key, label) => {
+  const val = import.meta.env[key];
+  if (!val) {
+    throw new Error(
+      `Variável de ambiente ${key} (${label}) não definida. Configure o ficheiro .env baseado no .env.example`,
+    );
+  }
+  return val;
+};
+
+export const APPWRITE_ENDPOINT = required(
+  "VITE_APPWRITE_ENDPOINT",
+  "Appwrite Endpoint",
+);
+export const APPWRITE_PROJECT_ID = required(
+  "VITE_APPWRITE_PROJECT_ID",
+  "Appwrite Project ID",
+);
+export const APPWRITE_DATABASE_ID = required(
+  "VITE_APPWRITE_ID_DATABASE",
+  "Appwrite Database ID",
+);
+export const APPWRITE_BUCKET_ID = required(
+  "VITE_APPWRITE_ID_BUCKET",
+  "Appwrite Bucket ID",
+);
 export const APPWRITE_API_KEY = import.meta.env.VITE_APPWRITE_API_KEY;
-export const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "djaycosmetics@gmail.com";
+export const ADMIN_EMAIL = required("VITE_ADMIN_EMAIL", "Admin Email");
 
 export const client = new Client()
   .setEndpoint(APPWRITE_ENDPOINT)
