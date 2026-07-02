@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import PremiumNavbar from "../components/PremiumNavbar";
-import Hero3D from "../components/Hero3D";
-import FeatureGrid from "../components/FeatureGrid";
-import TransitionSection from "../components/TransitionSection";
+import PremiumNavbar from "../Components/PremiumNavbar";
+import Hero3D from "../Components/Hero3D";
+import FeatureGrid from "../Components/FeatureGrid";
+import TransitionSection from "../Components/TransitionSection";
 import BestSellersSection from "../Components/BestSellersSection";
-import FooterCTA from "../components/FooterCTA";
+import FooterCTA from "../Components/FooterCTA";
 
 gsap.registerPlugin(ScrollTrigger);
 
