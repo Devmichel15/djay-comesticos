@@ -27,56 +27,38 @@ export const CartProvider = ({ children }) => {
   // SUBSCRIBE TO APPWRITE CART (Real-time sync)
   // =========================================================================
   useEffect(() => {
-    // Cleanup previous subscription
-    if (unsubscribeCart.current) {
-      unsubscribeCart.current();
-      unsubscribeCart.current = null;
-    }
+    let cancelled = false;
 
-    // Only subscribe if user is logged in (and has a valid ID)
-    // Appwrite user ID is usually $id, but we mapped it to uid or we used ...currentUser
-    // AuthContext sets user = { ...currentUser, role... }. currentUser has $id.
-    // However, dataService expects 'uid'.
-    // Let's check what AuthContext puts in 'user'.
-    // It puts { ...sessionUser, role }. sessionUser has $id.
-    // So user.$id is the ID.
-    // BUT AuthContext also had "uid: prev?.uid" in the merge?
-    // In my new AuthContext, I am just setting user = { ...currentUser, role }.
-    // So I should use user.$id.
-
-    // Safety check: existing code might use user.uid. I should probably ensure user.uid exists or update code to use user.$id.
-    // Let's map user.uid to user.$id in AuthContext or here.
-    // Better to use user.$id if available, or fallback.
     const userId = user?.$id || user?.uid;
 
-    if (!userId) {
-      // If logging out, clear cart if desired, or keep local
-      // setCartItems([]);
-      // Actually usually we want to keep local cart if they log out?
-      // But typically we clear or keep.
-      // let's follow previous logic:
-      // if (!user?.uid) { setCartItems([]); return; }
-      // But wait, the previous logic was: Non-logged in users HAVE a local cart.
-      // The subscription is only for syncing when logged in.
-      return;
-    }
+    if (!userId) return;
 
-    // Subscribe to user's cart (using cart document ID)
-    unsubscribeCart.current = dataService.subscribeToCartByUserId(
-      userId,
-      (cartData) => {
-        if (cartData && Array.isArray(cartData)) {
-          setCartItems(cartData);
-        } else {
-          // If cart is empty or invalid, maybe don't overwrite if we have local items?
-          // No, server is truth.
-          setCartItems([]);
+    const setupSubscription = async () => {
+      const unsubscribe = await dataService.subscribeToCartByUserId(
+        userId,
+        (cartData) => {
+          if (cancelled) return;
+          if (cartData && Array.isArray(cartData)) {
+            setCartItems(cartData);
+          } else {
+            setCartItems([]);
+          }
+          setIsLoading(false);
+        },
+      );
+
+      if (!cancelled) {
+        if (unsubscribeCart.current) {
+          unsubscribeCart.current();
         }
-        setIsLoading(false);
-      },
-    );
+        unsubscribeCart.current = unsubscribe;
+      }
+    };
+
+    setupSubscription();
 
     return () => {
+      cancelled = true;
       if (unsubscribeCart.current) {
         unsubscribeCart.current();
         unsubscribeCart.current = null;
