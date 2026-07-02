@@ -1,12 +1,8 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-  Instagram,
-  Facebook,
-  Twitter,
-} from "lucide-react";
+import { Instagram, Facebook, Twitter } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -83,9 +79,9 @@ const FooterCTA = () => {
 
     window.addEventListener('mousemove', handleMouseMove);
 
-    // Animation loop
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       
       particlesMesh.rotation.y += 0.001;
       particlesMesh.rotation.x += 0.0005;
@@ -101,7 +97,7 @@ const FooterCTA = () => {
 
       renderer.render(scene, camera);
     };
-    animate();
+    animationId = requestAnimationFrame(animate);
 
     // Handle resize
     const handleResize = () => {
@@ -112,6 +108,7 @@ const FooterCTA = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       particlesGeometry.dispose();
@@ -119,6 +116,7 @@ const FooterCTA = () => {
       ringGeometry.dispose();
       ringMaterial.dispose();
       ring2Geometry.dispose();
+      renderer.dispose();
     };
   }, []);
 

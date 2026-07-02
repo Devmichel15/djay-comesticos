@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -10,7 +10,6 @@ const TransitionSection = () => {
   const canvasRef = useRef(null);
   const textRef = useRef(null);
 
-  // Three.js DNA-like helix animation
   useEffect(() => {
     if (!canvasRef.current) return;
 
@@ -108,10 +107,10 @@ const TransitionSection = () => {
 
     camera.position.z = 8;
 
-    // Animation
     let time = 0;
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       time += 0.005;
 
       helixGroup.rotation.y += 0.003;
@@ -128,7 +127,7 @@ const TransitionSection = () => {
 
       renderer.render(scene, camera);
     };
-    animate();
+    animationId = requestAnimationFrame(animate);
 
     // Scroll-based animation
     gsap.to(helixGroup.rotation, {
@@ -159,12 +158,14 @@ const TransitionSection = () => {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animationId);
       window.removeEventListener('resize', handleResize);
       sphereGeometry.dispose();
       goldMaterial.dispose();
       whiteMaterial.dispose();
       particleGeometry.dispose();
       particleMaterial.dispose();
+      renderer.dispose();
     };
   }, []);
 

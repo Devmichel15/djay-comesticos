@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Search, X, User, Loader2 } from "lucide-react";
+import { ShoppingBag, Search, X, User } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { searchProducts } from "../utils/searchUtils";
@@ -32,21 +32,9 @@ const PremiumNavbar = () => {
   }, [isSearchOpen]);
 
   useEffect(() => {
-    if (searchQuery.length > 1) {
-      const results = searchProducts(searchQuery);
-      setSearchResults(results);
-    } else {
-      setSearchResults([]);
-    }
+    const results = searchProducts(searchQuery);
+    setSearchResults(results);
   }, [searchQuery]);
-
-  const handleSearchSubmit = (e) => {
-    e.preventDefault();
-    if (searchResults.length > 0) {
-      // Navigate to the first result if enter is pressed, or just keep results open
-      // For now, let's just keep the results open for the user to pick
-    }
-  };
 
   const closeSearch = () => {
     setIsSearchOpen(false);
@@ -99,7 +87,7 @@ const PremiumNavbar = () => {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    if (!isSearchOpen) setIsSearchOpen(true);
+                    setIsSearchOpen(true);
                   }}
                   onFocus={() => setIsSearchOpen(true)}
                 />

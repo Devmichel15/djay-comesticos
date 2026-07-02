@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
         } else {
           setUser(null);
         }
-      } catch (error) {
+      } catch {
         setUser(null);
       } finally {
         setLoading(false);
@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
       await authService.login({ email, password });
 
       // 3. Create User Profile in Database
-      const profile = await dataService.createUserProfile({
+      await dataService.createUserProfile({
         uid: userAccount.$id,
         email: userAccount.email,
         name: userAccount.name,

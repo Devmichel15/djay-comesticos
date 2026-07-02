@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppwrite } from "../hooks/useAppwrite";
 import { useAuth } from "../context/AuthContext";
@@ -8,7 +8,6 @@ import {
   Plus,
   Trash2,
   Edit,
-  TrendingUp,
   ShoppingCart,
   AlertCircle,
   X,
@@ -302,7 +301,7 @@ export default function AdminPanel() {
                   Níveis de Estoque
                 </h3>
                 <div className="space-y-3">
-                  {products?.slice(0, 5).map((product, idx) => (
+                  {products?.slice(0, 5).map((product) => (
                     <div
                       key={product.id}
                       className="flex items-center justify-between py-2 border-b border-white/5"

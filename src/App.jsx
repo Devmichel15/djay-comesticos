@@ -1,11 +1,10 @@
 import Home from "./Pages/Home";
-import React, { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Sign from "./Pages/Sign";
-import ProductPage from "./components/ProductPage";
+import ProductPage from "./Components/ProductPage";
 import { CartProvider } from "./context/CartContext";
 import { AuthProvider } from "./context/AuthContext";
-import CartDrawer from "./components/CartDrawer";
+import CartDrawer from "./Components/CartDrawer";
 import PrivateRoute from "./routes/PrivateRoute";
 import AdminPanel from "./Components/AdminPanel";
 import Products from "./Pages/Products";

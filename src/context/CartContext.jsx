@@ -61,8 +61,8 @@ export const CartProvider = ({ children }) => {
       return;
     }
 
-    // Subscribe to user's cart
-    unsubscribeCart.current = dataService.subscribeToCart(
+    // Subscribe to user's cart (using cart document ID)
+    unsubscribeCart.current = dataService.subscribeToCartByUserId(
       userId,
       (cartData) => {
         if (cartData && Array.isArray(cartData)) {
@@ -207,7 +207,9 @@ export const CartProvider = ({ children }) => {
 
           return updatedItems;
         });
-      } catch (error) {}
+      } catch {
+        // Silently handle
+      }
     },
     [user],
   );

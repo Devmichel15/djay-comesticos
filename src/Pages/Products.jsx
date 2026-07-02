@@ -1,15 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAppwrite } from "../hooks/useAppwrite";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import PremiumNavbar from "../components/PremiumNavbar";
+import PremiumNavbar from "../Components/PremiumNavbar";
 import { ShoppingCart } from "lucide-react";
 import { useCart } from "../context/CartContext";
 
 const Products = () => {
   const { products, fetchAllProducts, loading, error } = useAppwrite();
   const { addToCart } = useCart();
-  const navigate = useNavigate();
   const [filter, setFilter] = useState("Todos");
 
   useEffect(() => {

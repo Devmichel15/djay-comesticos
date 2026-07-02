@@ -1,0 +1,56 @@
+[
+  {
+    "categoria": "Face",
+    "produtos": [
+      { "nome": "Base Líquida Matte", "preco": "7.500 kz", "img": "/product1.png", "copy": "Base líquida de alta cobertura com acabamento matte e longa duração." },
+      { "nome": "Pó Compacto Translúcido", "preco": "5.200 kz", "img": "/product2.png", "copy": "Pó compacto que fixa a maquilhagem e controla a oleosidade." },
+      { "nome": "Corretivo Líquido", "preco": "4.800 kz", "img": "/product3.png", "copy": "Corretivo de alta cobertura para olheiras e imperfeições." },
+      { "nome": "Blush Cremoso", "preco": "3.900 kz", "img": "/product4.png", "copy": "Blush cremoso de longa duração com acabamento natural." },
+      { "nome": "Iluminador Líquido", "preco": "4.500 kz", "img": "/product5.png", "copy": "Iluminador líquido com partículas de brilho sutis." }
+    ]
+  },
+  {
+    "categoria": "Olhos",
+    "produtos": [
+      { "nome": "Paleta de Sombras Nude", "preco": "9.900 kz", "img": "/product6.png", "copy": "Paleta com 12 sombras nude de alta pigmentação." },
+      { "nome": "Delineador Líquido", "preco": "3.200 kz", "img": "/product7.png", "copy": "Delineador líquido à prova d'água de secagem rápida." },
+      { "nome": "Máscara de Pestanas Volume", "preco": "4.100 kz", "img": "/product8.png", "copy": "Máscara que dá volume e alongamento extremo às pestanas." },
+      { "nome": "Sombra Líquida Cintilante", "preco": "3.800 kz", "img": "/product9.png", "copy": "Sombra líquida com brilho intenso e longa duração." },
+      { "nome": "Lápis de Olhos Preto", "preco": "2.500 kz", "img": "/product10.png", "copy": "Lápis de olhos macio e cremoso de cor preta intensa." }
+    ]
+  },
+  {
+    "categoria": "Lábios",
+    "produtos": [
+      { "nome": "Batom Líquido Matte", "preco": "4.500 kz", "img": "/product11.png", "copy": "Batom líquido de longa duração com acabamento matte." },
+      { "nome": "Gloss Transparente", "preco": "3.200 kz", "img": "/product12.png", "copy": "Gloss transparente com brilho espelhado e hidratação." },
+      { "nome": "Batom Hidratante", "preco": "3.800 kz", "img": "/product13.png", "copy": "Batom hidratante com óleos naturais e cor vibrante." },
+      { "nome": "Lip Tint", "preco": "2.900 kz", "img": "/product14.png", "copy": "Tint labial de longa duração com acabamento natural." }
+    ]
+  },
+  {
+    "categoria": "Skincare",
+    "produtos": [
+      { "nome": "Sérum Facial Vitamina C", "preco": "8.500 kz", "img": "/product15.png", "copy": "Sérum antioxidante com vitamina C para pele iluminada." },
+      { "nome": "Hidratante Facial", "preco": "5.900 kz", "img": "/product16.png", "copy": "Creme hidratante leve de rápida absorção para todos os tipos de pele." },
+      { "nome": "Água Micelar", "preco": "3.500 kz", "img": "/product17.png", "copy": "Água micelar que limpa e remove a maquilhagem suavemente." },
+      { "nome": "Esfoliante Facial", "preco": "4.200 kz", "img": "/product18.png", "copy": "Esfoliante suave com partículas naturais para renovação celular." }
+    ]
+  },
+  {
+    "categoria": "Cabelo",
+    "produtos": [
+      { "nome": "Shampoo Profissional", "preco": "4.800 kz", "img": "/product19.png", "copy": "Shampoo profissional para limpeza profunda e revitalização." },
+      { "nome": "Condicionador Reparador", "preco": "5.200 kz", "img": "/product20.png", "copy": "Condicionador com queratina para reparação dos fios." },
+      { "nome": "Máscara Capilar", "preco": "6.900 kz", "img": "/product21.png", "copy": "Máscara capilar nutritiva para cabelos secos e danificados." },
+      { "nome": "Óleo Capilar", "preco": "3.800 kz", "img": "/product22.png", "copy": "Óleo capilar leave-in para brilho e controlo do frizz." }
+    ]
+  },
+  {
+    "categoria": "Acessórios",
+    "produtos": [
+      { "nome": "Kit de Pincéis Profissional", "preco": "12.500 kz", "img": "/product23.png", "copy": "Kit completo com 10 pincéis profissionais para maquilhagem." },
+      { "nome": "Esponja de Maquilhagem", "preco": "2.200 kz", "img": "/product24.png", "copy": "Esponja de maquilhagem reutilizável para aplicação perfeita." }
+    ]
+  }
+]

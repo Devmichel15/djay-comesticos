@@ -126,8 +126,9 @@ const FeatureGrid = () => {
     camera.position.z = 8;
 
     let time = 0;
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       time += 0.01;
 
       shapes.forEach((shape) => {
@@ -143,7 +144,7 @@ const FeatureGrid = () => {
 
       renderer.render(scene, camera);
     };
-    animate();
+    animationId = requestAnimationFrame(animate);
 
     // Scroll-based parallax
     gsap.to(camera.position, {
@@ -165,11 +166,13 @@ const FeatureGrid = () => {
 
     return () => {
       window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationId);
       shapes.forEach((shape) => shape.geometry.dispose());
       geometries.forEach((geo) => geo.dispose());
       material.dispose();
       lineGeometry.dispose();
       lineMaterial.dispose();
+      renderer.dispose();
     };
   }, []);
 

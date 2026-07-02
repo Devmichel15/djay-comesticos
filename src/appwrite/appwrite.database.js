@@ -1,5 +1,7 @@
-import { ID, Query } from "appwrite";
+import { ID, Query, Permission } from "appwrite";
 import { client, databases, APPWRITE_DATABASE_ID } from "./config";
+
+const { read, write } = Permission;
 
 const PRODUCTS_COLLECTION_ID = "products";
 const USERS_COLLECTION_ID = "users";
@@ -203,6 +205,51 @@ export class DataService {
       );
     } catch (error) {
       console.error("Appwrite service :: subscribeToCart :: error", error);
+      return () => {};
+    }
+  }
+
+  // =========================================================================
+  // USERS (Collection: users)
+  // =========================================================================
+  async createUserProfile({ uid, email, name }) {
+    try {
+      return await databases.createDocument(
+        APPWRITE_DATABASE_ID,
+        USERS_COLLECTION_ID,
+        uid,
+        {
+          email,
+          name,
+          uid,
+        },
+        [read("user:" + uid), write("user:" + uid)],
+      );
+    } catch (error) {
+      if (error.code === 409) {
+        return await databases.getDocument(
+          APPWRITE_DATABASE_ID,
+          USERS_COLLECTION_ID,
+          uid,
+        );
+      }
+      console.error("Appwrite service :: createUserProfile :: error", error);
+      return null;
+    }
+  }
+
+  // =========================================================================
+  // CARTS - Real-time subscription (uses cart document ID)
+  // =========================================================================
+  async subscribeToCartByUserId(userId, callback) {
+    try {
+      const cart = await this.getCart(userId);
+      if (cart) {
+        return this.subscribeToCart(cart.$id, callback);
+      }
+      return () => {};
+    } catch (error) {
+      console.error("Appwrite service :: subscribeToCartByUserId :: error", error);
       return () => {};
     }
   }

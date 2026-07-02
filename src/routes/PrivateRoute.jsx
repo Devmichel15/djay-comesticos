@@ -1,6 +1,6 @@
-import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { ADMIN_EMAIL } from "../appwrite/config";
 
 const PrivateRoute = ({ children }) => {
   const { isAuthenticated, user, loading } = useAuth();
@@ -10,9 +10,6 @@ const PrivateRoute = ({ children }) => {
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-
-  // Estrita verificação de Admin
-  const ADMIN_EMAIL = "djaycosmetics@gmail.com";
 
   if (!user || user.email !== ADMIN_EMAIL) {
     return <Navigate to="/" replace />;

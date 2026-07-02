@@ -84,8 +84,9 @@ function Sign() {
 
     window.addEventListener('mousemove', handleMouseMove);
 
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       
       particlesMesh.rotation.y += 0.0005;
       particlesMesh.rotation.x += 0.0002;
@@ -97,7 +98,7 @@ function Sign() {
 
       renderer.render(scene, camera);
     };
-    animate();
+    animationId = requestAnimationFrame(animate);
 
     const handleResize = () => {
       camera.aspect = window.innerWidth / window.innerHeight;
@@ -107,12 +108,14 @@ function Sign() {
     window.addEventListener('resize', handleResize);
 
     return () => {
+      cancelAnimationFrame(animationId);
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('resize', handleResize);
       particlesGeometry.dispose();
       particlesMaterial.dispose();
       ringGeometry.dispose();
       ringMaterial.dispose();
+      renderer.dispose();
     };
   }, []);
 

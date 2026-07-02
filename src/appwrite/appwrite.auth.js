@@ -23,7 +23,7 @@ export class AuthService {
         if (session) {
           await account.deleteSession("current");
         }
-      } catch (e) {
+      } catch {
         // No session exists, proceed
       }
 
@@ -37,7 +37,7 @@ export class AuthService {
   async getCurrentUser() {
     try {
       return await account.get();
-    } catch (error) {
+    } catch {
       return null;
     }
   }

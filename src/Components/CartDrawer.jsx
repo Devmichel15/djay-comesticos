@@ -1,5 +1,5 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { X, Plus, Minus, Trash2, ShoppingBag } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
@@ -11,7 +11,6 @@ const CartDrawer = () => {
     cartItems,
     isCartOpen,
     setIsCartOpen,
-    updateQuantity,
     removeFromCart,
     getTotalPrice,
     increaseQuantity,
@@ -41,7 +40,7 @@ const CartDrawer = () => {
     }
 
     // Format WhatsApp Message
-    const whatsappNumber = "244935354826";
+    const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "244935354826";
     const userName = user.displayName || user.name || "Cliente";
     const userEmail = user.email || "Sem email";
 

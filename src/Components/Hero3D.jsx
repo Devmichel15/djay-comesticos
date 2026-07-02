@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -10,7 +10,6 @@ const Hero3D = () => {
   const textRef = useRef(null);
 
   useEffect(() => {
-    // Scene Setup
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
       75,
@@ -26,7 +25,6 @@ const Hero3D = () => {
       mountRef.current.appendChild(renderer.domElement);
     }
 
-    // Objects
     const geometry = new THREE.IcosahedronGeometry(2.5, 2);
     const material = new THREE.MeshStandardMaterial({
       color: 0xd4a017,
@@ -42,7 +40,6 @@ const Hero3D = () => {
     gridHelper.position.y = -3;
     scene.add(gridHelper);
 
-    // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
     scene.add(ambientLight);
 
@@ -56,13 +53,14 @@ const Hero3D = () => {
 
     camera.position.z = 6;
 
+    let animationId;
     const animate = () => {
-      requestAnimationFrame(animate);
+      animationId = requestAnimationFrame(animate);
       sphere.rotation.y += 0.002;
       sphere.rotation.x += 0.001;
       renderer.render(scene, camera);
     };
-    animate();
+    animationId = requestAnimationFrame(animate);
 
     gsap.to(sphere.rotation, {
       y: Math.PI * 0.5,
@@ -82,12 +80,14 @@ const Hero3D = () => {
     window.addEventListener("resize", handleResize);
 
     return () => {
+      cancelAnimationFrame(animationId);
       window.removeEventListener("resize", handleResize);
       if (mountRef.current) {
         mountRef.current.removeChild(renderer.domElement);
       }
       geometry.dispose();
       material.dispose();
+      renderer.dispose();
     };
   }, []);
 
